@@ -1,7 +1,7 @@
 {
-  "name": "Métrés Chantier PRO",
-  "short_name": "Métrés Pro",
-  "description": "Calcul de débits matériaux conforme DTU avec estimation de prix",
+  "name": "Calepin de Chantier",
+  "short_name": "Calepin",
+  "description": "Calcul de débits matériaux et conseils techniques, avec estimation de prix",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
