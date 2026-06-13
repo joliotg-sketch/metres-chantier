@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "fr.joliotg.metres",
+      "sha256_cert_fingerprints": [
+        "E7:E4:4B:9D:80:6D:19:F0:65:C5:79:E1:BA:D3:BD:33:80:D9:3A:7C:AA:BD:55:25:D0:3F:A1:C4:40:4D:B9:9A"
+      ]
+    }
+  }
+]
