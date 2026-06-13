@@ -1510,6 +1510,477 @@ const OUVRAGES = {
     ],
     viz: 'mur'
   },
+
+  // ═══════════════ STRUCTURE BÉTON ═══════════════
+  'structure-beton': {
+    label: 'Structure Béton',
+    icon: '<rect x="2" y="3" width="4" height="18"/><rect x="18" y="3" width="4" height="18"/><rect x="2" y="3" width="20" height="4"/><line x1="9" y1="10" x2="9" y2="18" stroke-dasharray="2"/><line x1="15" y1="10" x2="15" y2="18" stroke-dasharray="2"/>',
+    dtu: { ref: 'Eurocode 2 (NF EN 1992) / DTU 21', text: '⚠️ MODULE INDICATIF — Le pré-dimensionnement ci-dessous donne des sections COURANTES d\'après abaques usuels. <strong>Il ne remplace pas une note de calcul de bureau d\'études.</strong> Tout élément porteur (poutre, poteau, dalle, linteau) doit être vérifié par un homme de l\'art (descente de charges, ferraillage ELU/ELS, Eurocode 2). Béton structurel : C25/30 minimum, enrobage 3 cm (XC1) à 5 cm (extérieur).' },
+    systemes: [
+      { id: 'poutre', nom: 'Poutre / linteau', desc: 'Estimation de section et volume béton + acier indicatif selon la portée. Hauteur ≈ portée/10, largeur ≈ h/2.' },
+      { id: 'poteau', nom: 'Poteau', desc: 'Section indicative selon hauteur et charge reprise. Section mini 20×20 en MI (DTU 21).' },
+      { id: 'dalle-pleine', nom: 'Dalle pleine portée', desc: 'Épaisseur indicative ≈ portée/25 à /30. Pour dalle sur appuis — distinct du dallage sur terre-plein.' },
+    ],
+    dims: (sys) => {
+      if (sys === 'poutre') return [
+        { type:'num', id:'longueur', label:'Portée libre (entre appuis)', unit:'M' },
+        { type:'num', id:'nombre', label:'Nombre de poutres identiques', unit:'U' },
+        { type:'select', id:'charge', label:'Niveau de charge estimé', options: [
+          {val:'faible', label:'Faible (toiture légère, comble non aménagé)'},
+          {val:'moyen', label:'Moyen (plancher habitation courant)'},
+          {val:'fort', label:'Fort (plancher + cloisons / stockage)'},
+        ]},
+      ];
+      if (sys === 'poteau') return [
+        { type:'num', id:'hauteur', label:'Hauteur du poteau', unit:'M' },
+        { type:'num', id:'nombre', label:'Nombre de poteaux', unit:'U' },
+        { type:'select', id:'charge', label:'Charge reprise (étages au-dessus)', options: [
+          {val:'1', label:'1 niveau (toiture)'},
+          {val:'2', label:'2 niveaux (R+1 + toiture)'},
+          {val:'3', label:'3 niveaux et + (consulter BE)'},
+        ]},
+      ];
+      return [ // dalle-pleine
+        { type:'num', id:'longueur', label:'Portée (sens porteur)', unit:'M' },
+        { type:'num', id:'largeur', label:'Largeur', unit:'M' },
+        { type:'select', id:'appuis', label:'Type d\'appuis', options: [
+          {val:'2', label:'Sur 2 appuis (portée simple)'},
+          {val:'4', label:'Sur 4 appuis (portée dans 2 sens)'},
+        ]},
+      ];
+    },
+    options: () => [
+      { id:'coffrage', label:'Estimer le coffrage', sub:'Surface de banches/contreplaqué', def:true },
+      { id:'etais', label:'Étais / étaiement', sub:'Location estimée', def:false },
+    ],
+    calc: (D, sys, opts) => {
+      const mats = [];
+
+      if (sys === 'poutre') {
+        const L = D.longueur, nb = D.nombre || 1;
+        // Pré-dim usuel : h = L/10, b = h/2, arrondi
+        let h = Math.ceil(L * 100 / 10 / 5) * 5; // cm, arrondi 5
+        if (D.charge === 'fort') h = Math.ceil(L * 100 / 8 / 5) * 5;
+        if (D.charge === 'faible') h = Math.ceil(L * 100 / 12 / 5) * 5;
+        h = Math.max(20, h);
+        const b = Math.max(20, Math.ceil(h / 2 / 5) * 5);
+        const volUnit = (b/100) * (h/100) * (L + 0.4); // + ancrage sur appuis
+        const volTotal = volUnit * nb;
+        mats.push({ nom: `SECTION INDICATIVE poutre`, qte: `${b}×${h}`, unite: 'cm (b×h)',
+          detail: `Pour portée ${L} m, charge ${D.charge} — h≈L/${D.charge==='fort'?8:D.charge==='faible'?12:10}. À VÉRIFIER PAR BE.`, coeff: '⚠', dtu: 'Eurocode 2' });
+        mats.push({ nom: 'Béton C25/30', qte: (volTotal * 1.05).toFixed(3), unite: 'm³',
+          detail: `${nb} poutre(s) — section ${b}×${h} cm × ${(L+0.4).toFixed(1)} m`, coeff: '×1,05', dtu: '/' });
+        // Acier indicatif ~ 90-130 kg/m³ pour poutre
+        mats.push({ nom: 'Acier HA (indicatif)', qte: Math.ceil(volTotal * 120), unite: 'kg',
+          detail: `≈ 120 kg/m³ — RATIO INDICATIF, ferraillage réel = note de calcul BE`, coeff: '⚠', dtu: 'Eurocode 2' });
+        mats.push({ nom: 'Cadres / étriers HA8', qte: Math.ceil((L / 0.15) * nb), unite: 'cadres',
+          detail: `Espacement ~15 cm — indicatif`, coeff: '⚠', dtu: '/' });
+        if (opts['coffrage']) {
+          const surfCoff = (b/100 + 2*(h/100)) * L * nb;
+          mats.push({ nom: 'Coffrage (CP + bois)', qte: surfCoff.toFixed(2), unite: 'm²',
+            detail: `Fond + 2 joues — réutilisable`, coeff: '/', dtu: '/' });
+        }
+      }
+
+      if (sys === 'poteau') {
+        const H = D.hauteur, nb = D.nombre || 1;
+        const niv = parseInt(D.charge);
+        // Section indicative selon charge
+        let sect = niv === 1 ? 20 : niv === 2 ? 25 : 30;
+        const volUnit = (sect/100) * (sect/100) * H;
+        const volTotal = volUnit * nb;
+        mats.push({ nom: `SECTION INDICATIVE poteau`, qte: `${sect}×${sect}`, unite: 'cm',
+          detail: `${niv} niveau(x) repris — section mini DTU 21 = 20×20. À VÉRIFIER PAR BE${niv>=3?' (OBLIGATOIRE au-delà de R+1)':''}.`, coeff: '⚠', dtu: 'DTU 21' });
+        mats.push({ nom: 'Béton C25/30', qte: (volTotal * 1.05).toFixed(3), unite: 'm³',
+          detail: `${nb} poteau(x) — ${sect}×${sect} cm × ${H} m`, coeff: '×1,05', dtu: '/' });
+        mats.push({ nom: 'Acier HA longitudinal (indicatif)', qte: Math.ceil(volTotal * 110), unite: 'kg',
+          detail: `≈ 110 kg/m³ — 4 à 6 HA selon section. RATIO INDICATIF.`, coeff: '⚠', dtu: 'Eurocode 2' });
+        mats.push({ nom: 'Cadres HA6/8', qte: Math.ceil((H / 0.20) * nb), unite: 'cadres',
+          detail: `Espacement ~20 cm (15 cm en zone de recouvrement)`, coeff: '⚠', dtu: '/' });
+        if (opts['coffrage']) {
+          mats.push({ nom: 'Coffrage poteau', qte: (4 * (sect/100) * H * nb).toFixed(2), unite: 'm²',
+            detail: `4 faces — banches ou cartons coffrage`, coeff: '/', dtu: '/' });
+        }
+      }
+
+      if (sys === 'dalle-pleine') {
+        const L = D.longueur, lg = D.largeur;
+        const S = D.surfaceNette;
+        const appuis = parseInt(D.appuis);
+        // ep ≈ L/25 (2 appuis) ou L/30 (4 appuis) — portée déterminante
+        const portee = appuis === 4 ? Math.min(L, lg) : L;
+        let ep = Math.ceil(portee * 100 / (appuis === 4 ? 30 : 25));
+        ep = Math.max(15, Math.ceil(ep / 1) ); // mini 15 cm dalle pleine
+        const vol = S * (ep / 100);
+        mats.push({ nom: `ÉPAISSEUR INDICATIVE dalle`, qte: ep, unite: 'cm',
+          detail: `Portée ${portee} m sur ${appuis} appuis — ép≈portée/${appuis===4?30:25}. À VÉRIFIER PAR BE.`, coeff: '⚠', dtu: 'Eurocode 2' });
+        mats.push({ nom: 'Béton C25/30', qte: (vol * 1.05).toFixed(2), unite: 'm³',
+          detail: `${S.toFixed(2)} m² × ${ep} cm + 5%`, coeff: '×1,05', dtu: '/' });
+        mats.push({ nom: 'Acier HA (nappe inf. + sup.)', qte: Math.ceil(vol * 90), unite: 'kg',
+          detail: `≈ 90 kg/m³ — RATIO INDICATIF, plan de ferraillage = BE`, coeff: '⚠', dtu: 'Eurocode 2' });
+        mats.push({ nom: 'Distanciers / chaises', qte: Math.ceil(S * 4), unite: 'pièces',
+          detail: `Maintien des nappes — enrobage 3 cm`, coeff: '/', dtu: '/' });
+        if (opts['coffrage']) {
+          mats.push({ nom: 'Coffrage (fond de dalle)', qte: (S * 1.05).toFixed(2), unite: 'm²',
+            detail: `Contreplaqué + bastaings`, coeff: '×1,05', dtu: '/' });
+        }
+      }
+
+      if (opts['etais']) {
+        const surf = D.surfaceNette || (D.longueur * 2);
+        mats.push({ nom: 'Étais (location)', qte: Math.ceil(surf / 1.5), unite: 'étais',
+          detail: `~1 étai / 1,5 m² — maintien jusqu\'à durcissement (28 j)`, coeff: '/', dtu: '/' });
+      }
+
+      return mats;
+    },
+    notes: () => [
+      { dtu:true, text:'<strong>⚠️ AVERTISSEMENT STRUCTURE :</strong> les sections et ratios d\'acier affichés sont des ordres de grandeur issus d\'abaques courants. Le dimensionnement réel (descente de charges, ferraillage, vérifications Eurocode 2) RELÈVE OBLIGATOIREMENT d\'un bureau d\'études structure. Une sous-estimation peut provoquer l\'effondrement de l\'ouvrage.' },
+      { dtu:true, text:'<strong>Béton :</strong> C25/30 minimum en structure, enrobage des aciers 3 cm (intérieur sec XC1), 4 cm (XC2/XC3), 5 cm (extérieur exposé). Décoffrage des poutres/dalles : étaiement maintenu 21-28 jours.' },
+      { dtu:false, text:'Pour les linteaux courants au-dessus d\'ouvertures < 1,80 m en mur non porteur, des linteaux préfabriqués (prélinteaux + béton) évitent souvent le calcul. Au-delà ou en porteur : BE.' },
+    ],
+    viz: 'structure'
+  },
+
+  // ═══════════════ PLANCHER BOIS ═══════════════
+  'plancher-bois': {
+    label: 'Plancher Bois',
+    icon: '<rect x="2" y="4" width="20" height="3"/><line x1="5" y1="7" x2="5" y2="20"/><line x1="9" y1="7" x2="9" y2="20"/><line x1="13" y1="7" x2="13" y2="20"/><line x1="17" y1="7" x2="17" y2="20"/><line x1="21" y1="7" x2="21" y2="20"/>',
+    dtu: { ref: 'DTU 31.1 (charpente) / Eurocode 5', text: '⚠️ MODULE INDICATIF — Les sections de solives proposées suivent des abaques courants (habitation, charge 150 kg/m²). <strong>Pour toute charge inhabituelle, grande portée ou doute, faire vérifier par un BE bois.</strong> Entraxe solives courant : 40-60 cm. Flèche admissible : portée/300 (L/300). Bois de structure classé C18/C24 minimum.' },
+    systemes: [
+      { id: 'solivage', nom: 'Solivage traditionnel (sapin/épicéa)', desc: 'Solives bois massif sur murs ou poutre porteuse. Section selon portée et entraxe (abaque habitation).' },
+      { id: 'lvl-bois-i', nom: 'Poutres I / LVL (grandes portées)', desc: 'Solives industrielles (I-joist, LVL) pour portées > 5 m ou faibles retombées. Données fabricant requises.' },
+      { id: 'solive-plafond', nom: 'Solivage + plafond + plancher', desc: 'Complexe complet : solives + OSB/plancher + isolation + plafond placo dessous.' },
+    ],
+    dims: (sys) => [
+      { type:'num', id:'longueur', label:'Portée des solives (entre appuis)', unit:'M' },
+      { type:'num', id:'largeur', label:'Largeur du plancher (sens solives)', unit:'M' },
+      { type:'select', id:'entraxe', label:'Entraxe des solives', options: [
+        {val:'0.40', label:'40 cm (recommandé / charge forte)'},
+        {val:'0.50', label:'50 cm (standard)'},
+        {val:'0.60', label:'60 cm (charge modérée, isolant 600)'},
+      ]},
+      { type:'select', id:'usage', label:'Usage du plancher', options: [
+        {val:'comble', label:'Comble non aménagé (50 kg/m²)'},
+        {val:'habitation', label:'Habitation courante (150 kg/m²)'},
+        {val:'lourd', label:'Plancher chargé / stockage (250 kg/m²)'},
+      ]},
+    ],
+    options: (sys) => {
+      const o = [
+        { id:'plancher-osb', label:'Plancher OSB / aggloméré', sub:'Panneaux rainurés-bouvetés 22 mm', def:true },
+        { id:'solive-double', label:'Chevêtre (trémie escalier/conduit)', sub:'Solives doublées autour de l\'ouverture', def:false },
+      ];
+      if (sys === 'solive-plafond') {
+        o.push({ id:'isolation', label:'Isolation entre solives', sub:'Laine + suspentes', def:true });
+        o.push({ id:'plafond-placo', label:'Plafond placo dessous', sub:'BA13 + ossature', def:true });
+      }
+      return o;
+    },
+    calc: (D, sys, opts) => {
+      const L = D.longueur, lg = D.largeur;
+      const S = D.surfaceNette;
+      const entraxe = parseFloat(D.entraxe);
+      const mats = [];
+
+      // Abaque indicatif section solive (sapin C24, entraxe 50, L/300)
+      // Portée -> hauteur solive (cm) approximative
+      const usageCoef = D.usage === 'lourd' ? 1.2 : D.usage === 'comble' ? 0.8 : 1.0;
+      let hSolive = Math.ceil((8 + (L - 2) * 4) * usageCoef / 2) * 2; // approche linéaire, arrondi 2cm
+      hSolive = Math.max(10, Math.min(30, hSolive));
+      const bSolive = hSolive <= 18 ? 6.3 : hSolive <= 24 ? 7.5 : 10;
+
+      const nbSolives = Math.ceil(lg / entraxe) + 1;
+      const mlSolives = nbSolives * (L + 0.2);
+
+      if (sys !== 'lvl-bois-i') {
+        mats.push({ nom: `SECTION INDICATIVE solive`, qte: `${bSolive}×${hSolive}`, unite: 'cm',
+          detail: `Portée ${L} m, entraxe ${entraxe*100} cm, usage ${D.usage} — sapin C24. À VÉRIFIER (abaque indicatif, flèche L/300).`, coeff: '⚠', dtu: 'Eurocode 5' });
+        mats.push({ nom: `Solives ${bSolive}×${hSolive} (sapin C24)`, qte: nbSolives, unite: 'solives',
+          detail: `${nbSolives} pièces de ${(L+0.2).toFixed(2)} m — soit ${mlSolives.toFixed(1)} ml`, coeff: '/', dtu: 'DTU 31.1' });
+        // volume bois pour info prix
+        const volBois = (bSolive/100)*(hSolive/100)*mlSolives;
+        mats.push({ nom: 'Volume bois solivage', qte: volBois.toFixed(3), unite: 'm³',
+          detail: `Pour estimation prix (bois vendu au m³ ou ml)`, coeff: '/', dtu: '/' });
+      } else {
+        mats.push({ nom: 'Solives I-joist / LVL', qte: nbSolives, unite: 'solives',
+          detail: `${nbSolives} pièces de ${(L+0.2).toFixed(2)} m — SECTION SELON ABAQUE FABRICANT (portée ${L} m)`, coeff: '⚠', dtu: 'AT fabricant' });
+      }
+
+      // Muraillères / lambourdes d'appui
+      mats.push({ nom: 'Muraillère / lisse d\'appui', qte: Math.ceil(lg * 2 / 1) , unite: 'ml',
+        detail: `Appui des solives sur murs (2 côtés)`, coeff: '/', dtu: 'DTU 31.1' });
+      mats.push({ nom: 'Sabots / étriers métalliques', qte: nbSolives * 2, unite: 'sabots',
+        detail: `Fixation des solives (2 par solive)`, coeff: '/', dtu: '/' });
+
+      if (opts['solive-double']) {
+        mats.push({ nom: 'Solives de chevêtre (doublées)', qte: 4, unite: 'solives',
+          detail: `Encadrement de trémie — solives doublées + about`, coeff: '/', dtu: 'DTU 31.1' });
+      }
+
+      if (opts['plancher-osb']) {
+        mats.push({ nom: 'Panneaux OSB3 22mm R+B', qte: Math.ceil(S / (2.5*0.675) * 1.08), unite: 'panneaux',
+          detail: `2,50×0,675 m rainurés-bouvetés — +8% chutes`, coeff: '×1,08', dtu: 'DTU 51.3' });
+        mats.push({ nom: 'Vis plancher 5×50', qte: Math.ceil(S * 25), unite: 'vis',
+          detail: `~25 vis/m² — vissage sur chaque solive`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Colle PU (joints R+B)', qte: Math.ceil(S / 25), unite: 'cartouches',
+          detail: `Encollage des rainures`, coeff: '/', dtu: '/' });
+      }
+
+      if (opts['isolation']) {
+        const epIso = entraxe >= 0.60 ? 200 : 240;
+        mats.push({ nom: `Laine de verre ${hSolive >= 20 ? 200 : 140}mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
+          detail: `Entre solives — épaisseur ≤ hauteur solive — +5%`, coeff: '×1,05', dtu: 'DTU 45.10' });
+      }
+
+      if (opts['plafond-placo']) {
+        mats.push({ nom: 'Plaques BA13 (plafond)', qte: Math.ceil(S / 3 * 1.10), unite: 'plaques',
+          detail: `Sous solives — +10% chutes`, coeff: '×1,10', dtu: 'DTU 25.41' });
+        mats.push({ nom: 'Fourrures + suspentes', qte: Math.ceil(S * 3.5), unite: 'ml + susp.',
+          detail: `Ossature plafond sous solivage`, coeff: '/', dtu: 'DTU 25.41' });
+        mats.push({ nom: 'Vis + enduit + bandes', qte: Math.ceil(S / 12), unite: 'sacs 25kg',
+          detail: `Finition plafond`, coeff: '/', dtu: '/' });
+      }
+
+      return mats;
+    },
+    notes: (sys) => [
+      { dtu:true, text:'<strong>⚠️ AVERTISSEMENT :</strong> les sections de solives sont issues d\'abaques courants (habitation, bois C24, flèche L/300). Pour une charge forte, une grande portée, un plancher recevant cloisons lourdes ou en cas de doute, faire valider par un bureau d\'études bois (Eurocode 5).' },
+      { dtu:true, text:'<strong>DTU 31.1 :</strong> appui des solives ≥ 5 cm sur maçonnerie (sabot métallique recommandé). Entraxe usuel 40-60 cm. Contreventement par le plancher OSB cloué/vissé.' },
+      ...(sys === 'lvl-bois-i' ? [{ dtu:true, text:'<strong>Poutres I / LVL :</strong> le dimensionnement suit IMPÉRATIVEMENT les tableaux de charge du fabricant (Steico, Finnjoist, etc.). Pas d\'entaille ni perçage hors zones autorisées.' }] : []),
+      { dtu:false, text:'Plancher chauffant sur bois, salle de bain à l\'étage, ou plancher acoustique entre logements : prévoir des dispositions spécifiques (chape sèche, désolidarisation).' },
+    ],
+    viz: 'plancher-bois'
+  },
+
+  // ═══════════════ CHAUFFAGE (dimensionnement) ═══════════════
+  'chauffage': {
+    label: 'Chauffage',
+    icon: '<rect x="4" y="4" width="16" height="16" rx="1"/><line x1="8" y1="4" x2="8" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="16" y1="4" x2="16" y2="20"/>',
+    dtu: { ref: 'Méthode simplifiée (estimation)', text: 'Estimation de la PUISSANCE DE CHAUFFE d\'une pièce selon son volume, son isolation et son exposition. <strong>Méthode indicative</strong> (coefficient G simplifié × volume × ΔT). Pour un dimensionnement précis ou une PAC, faire réaliser un bilan thermique RT/RE par un professionnel (méthode déperditions pièce par pièce).' },
+    systemes: [
+      { id: 'radiateur-eau', nom: 'Radiateurs eau chaude (chaudière/PAC)', desc: 'Calcule la puissance par pièce et propose un nombre/type de radiateurs eau (acier, fonte, alu).' },
+      { id: 'radiateur-elec', nom: 'Radiateurs électriques', desc: 'Puissance nécessaire → nombre de radiateurs électriques (inertie, rayonnant).' },
+      { id: 'plancher-chauffant', nom: 'Plancher chauffant', desc: 'Puissance + surface au sol disponible → vérifie la faisabilité et la longueur de tube.' },
+    ],
+    dims: () => [
+      { type:'num', id:'longueur', label:'Longueur de la pièce', unit:'M' },
+      { type:'num', id:'largeur', label:'Largeur de la pièce', unit:'M' },
+      { type:'num', id:'hauteur', label:'Hauteur sous plafond', unit:'M' },
+      { type:'select', id:'isolation', label:'Niveau d\'isolation', options: [
+        {val:'tres-bonne', label:'Très bonne (RT2012/RE2020, neuf isolé)'},
+        {val:'bonne', label:'Bonne (rénovation isolée récente)'},
+        {val:'moyenne', label:'Moyenne (isolation partielle, années 90-2000)'},
+        {val:'faible', label:'Faible (peu/pas isolé, ancien)'},
+      ]},
+      { type:'select', id:'exposition', label:'Exposition / situation', options: [
+        {val:'favorable', label:'Favorable (sud, pièce entourée d\'autres pièces)'},
+        {val:'normale', label:'Normale (1-2 murs extérieurs)'},
+        {val:'defavorable', label:'Défavorable (angle, nord, au-dessus vide)'},
+      ]},
+      { type:'select', id:'zone', label:'Zone climatique (France)', options: [
+        {val:'H1', label:'H1 (Nord, Est, montagne — froid)'},
+        {val:'H2', label:'H2 (Ouest, centre — tempéré)'},
+        {val:'H3', label:'H3 (Méditerranée — doux)'},
+      ]},
+    ],
+    options: (sys) => {
+      const o = [];
+      if (sys === 'radiateur-eau') o.push({ id:'regime-bas', label:'Régime basse température (PAC)', sub:'Radiateurs surdimensionnés ~+50%', def:false });
+      return o;
+    },
+    calc: (D, sys, opts) => {
+      const L = D.longueur, lg = D.largeur, h = D.hauteur;
+      const volume = L * lg * h;
+      const surface = L * lg;
+      const mats = [];
+
+      const G = { 'tres-bonne': 0.5, 'bonne': 0.8, 'moyenne': 1.1, 'faible': 1.6 }[D.isolation];
+      const dT = { 'H1': 39, 'H2': 36, 'H3': 33 }[D.zone];
+      const expo = { 'favorable': 0.9, 'normale': 1.0, 'defavorable': 1.15 }[D.exposition];
+
+      const puissance = Math.round(volume * G * dT * expo);
+      const puissanceArr = Math.ceil(puissance / 50) * 50;
+
+      mats.push({ nom: 'PUISSANCE DE CHAUFFE estimée', qte: puissanceArr, unite: 'W',
+        detail: `Volume ${volume.toFixed(1)} m³ × G ${G} × ΔT ${dT}°C × expo ${expo} — soit ~${(puissanceArr/surface).toFixed(0)} W/m²`, coeff: '≈', dtu: '/' });
+
+      if (sys === 'radiateur-eau') {
+        const facteurRegime = opts['regime-bas'] ? 1.5 : 1.0;
+        const pCorrigee = Math.ceil(puissanceArr * facteurRegime / 50) * 50;
+        const punitW = 1000;
+        const nbRad = Math.max(1, Math.ceil(pCorrigee / punitW));
+        mats.push({ nom: 'Radiateurs eau chaude', qte: nbRad, unite: 'radiateurs',
+          detail: `${pCorrigee} W ÷ ~${punitW} W/radiateur${opts['regime-bas']?' (BT majorée ×1,5)':''} — répartir sous fenêtres`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Puissance unitaire conseillée', qte: Math.ceil(pCorrigee / nbRad / 50) * 50, unite: 'W/rad',
+          detail: `Pour ${nbRad} radiateur(s) — choisir modèle selon dimensions dispo`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Robinets thermostatiques', qte: nbRad, unite: 'pièces',
+          detail: `1 par radiateur — régulation pièce par pièce`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Tube multicouche 16mm', qte: Math.ceil(nbRad * 12), unite: 'ml',
+          detail: `Aller-retour estimé ~12 ml/radiateur (variable selon distance chaufferie)`, coeff: '/', dtu: '/' });
+      }
+
+      if (sys === 'radiateur-elec') {
+        const punitW = 1500;
+        const nbRad = Math.max(1, Math.ceil(puissanceArr / punitW));
+        mats.push({ nom: 'Radiateurs électriques', qte: nbRad, unite: 'radiateurs',
+          detail: `${puissanceArr} W total — inertie (fonte/céramique) recommandé pièce de vie`, coeff: '/', dtu: 'NF C 15-100' });
+        mats.push({ nom: 'Puissance unitaire conseillée', qte: Math.ceil(puissanceArr / nbRad / 250) * 250, unite: 'W/rad',
+          detail: `Pour ${nbRad} radiateur(s) — gammes 1000/1500/2000 W`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Circuits dédiés', qte: Math.ceil(puissanceArr / 3500), unite: 'circuits',
+          detail: `Max 3500 W par circuit chauffage (NF C 15-100) — protégé 20A`, coeff: '/', dtu: 'NF C 15-100' });
+      }
+
+      if (sys === 'plancher-chauffant') {
+        const wm2 = puissanceArr / surface;
+        const faisable = wm2 <= 100;
+        mats.push({ nom: 'Densité de chauffe requise', qte: Math.round(wm2), unite: 'W/m²',
+          detail: faisable ? `✓ Compatible plancher chauffant (max ~100 W/m²)` : `⚠ ${Math.round(wm2)} W/m² > 100 : isolation insuffisante ou complément nécessaire`, coeff: faisable?'✓':'⚠', dtu: 'DTU 65.14' });
+        mats.push({ nom: 'Tube PER/multicouche 16mm', qte: Math.ceil(surface * 7), unite: 'ml',
+          detail: `Pas de pose 15 cm ≈ 7 ml/m² (10 cm si forte puissance)`, coeff: '/', dtu: 'DTU 65.14' });
+        mats.push({ nom: 'Surface chauffante au sol', qte: surface.toFixed(1), unite: 'm²',
+          detail: `Prévoir 5-10 cm de retrait en périphérie et sous meubles fixes`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Collecteur (départs)', qte: Math.max(1, Math.ceil(surface / 20)), unite: 'boucle(s)',
+          detail: `1 boucle / ~20 m² (longueur boucle ≤ 100 m)`, coeff: '/', dtu: 'DTU 65.14' });
+      }
+
+      return mats;
+    },
+    notes: (sys) => [
+      { dtu:false, text:'<strong>Méthode indicative :</strong> ce calcul donne un ordre de grandeur via le coefficient volumique G. Pour un dimensionnement précis (notamment avant d\'investir dans une PAC ou une chaudière), faites établir un bilan de déperditions pièce par pièce par un chauffagiste ou bureau d\'études thermiques.' },
+      { dtu:false, text:'<strong>Règle de pose :</strong> placer les émetteurs de préférence sous les fenêtres / sur les parois froides pour contrer l\'effet de paroi froide et homogénéiser la température.' },
+      ...(sys === 'radiateur-eau' ? [{ dtu:false, text:'<strong>Basse température (PAC) :</strong> un radiateur dimensionné pour 70°C doit être agrandi (~×1,5 à ×2) pour fonctionner à 35-45°C avec une pompe à chaleur. Cocher l\'option si PAC.' }] : []),
+      ...(sys === 'plancher-chauffant' ? [{ dtu:true, text:'<strong>DTU 65.14 :</strong> température de surface du sol limitée à 28°C (zone occupée), 35°C en zone périphérique. Longueur de boucle ≤ 100 m, équilibrage au collecteur.' }] : []),
+    ],
+    viz: 'piece'
+  },
+
+  // ═══════════════ ÉLECTRICITÉ (NF C 15-100) ═══════════════
+  'electricite': {
+    label: 'Électricité',
+    icon: '<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+    dtu: { ref: 'NF C 15-100', text: 'Estimation du nombre de circuits, prises et points lumineux par pièce selon la norme NF C 15-100 (installations électriques basse tension des locaux d\'habitation). Les minima dépendent du type et de la surface de la pièce. ⚠️ Les travaux électriques doivent respecter la norme et idéalement être réalisés/vérifiés par un électricien (Consuel obligatoire pour le neuf et le raccordement).' },
+    systemes: [
+      { id: 'piece-seche', nom: 'Pièce sèche (séjour, chambre, bureau)', desc: 'Prises et éclairage selon surface. Séjour : 1 prise/4 m² (min 5), chambre min 3.' },
+      { id: 'cuisine', nom: 'Cuisine', desc: 'Norme renforcée : 6 prises dont 4 sur plan de travail, circuits spécialisés (four, plaque, lave-vaisselle...).' },
+      { id: 'salle-eau', nom: 'Salle d\'eau / SdB', desc: 'Volumes de sécurité, liaison équipotentielle, prises et éclairage IP adaptés.' },
+      { id: 'tableau', nom: 'Tableau & estimation globale logement', desc: 'Estime le nombre de circuits et le calibre du tableau pour un logement complet.' },
+    ],
+    dims: (sys) => {
+      if (sys === 'tableau') return [
+        { type:'num', id:'surface_totale', label:'Surface habitable totale', unit:'M²' },
+        { type:'num', id:'nb_pieces', label:'Nombre de pièces principales', unit:'U' },
+        { type:'select', id:'chauffage_elec', label:'Chauffage électrique ?', options: [
+          {val:'non', label:'Non (gaz, PAC, autre)'},
+          {val:'oui', label:'Oui (radiateurs électriques)'},
+        ]},
+      ];
+      return [
+        { type:'num', id:'longueur', label:'Longueur de la pièce', unit:'M' },
+        { type:'num', id:'largeur', label:'Largeur de la pièce', unit:'M' },
+      ];
+    },
+    options: (sys) => {
+      if (sys === 'piece-seche') return [
+        { id:'rj45', label:'Prises RJ45 (réseau/TV)', sub:'Min 1 par pièce principale (NF C 15-100)', def:true },
+        { id:'va-et-vient', label:'Éclairage en va-et-vient', sub:'2 points de commande', def:false },
+      ];
+      if (sys === 'cuisine') return [
+        { id:'ilot', label:'Îlot central', sub:'Prises supplémentaires', def:false },
+      ];
+      return [];
+    },
+    calc: (D, sys, opts) => {
+      const mats = [];
+
+      if (sys === 'piece-seche' || sys === 'cuisine' || sys === 'salle-eau') {
+        const S = D.surfaceNette;
+
+        if (sys === 'piece-seche') {
+          const nbPrises = Math.max(S > 28 ? Math.ceil(S/4) : (S >= 12 ? 5 : 3), 3);
+          mats.push({ nom: 'Prises 16A (2P+T)', qte: nbPrises, unite: 'prises',
+            detail: `${S.toFixed(1)} m² — séjour: 1/4m² (min 5) · chambre: min 3`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Points lumineux', qte: Math.max(1, Math.ceil(S / 20)), unite: 'points',
+            detail: `Min 1 point équipé par pièce (plafond ou applique)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Interrupteur(s)', qte: opts['va-et-vient'] ? 2 : 1, unite: 'pièces',
+            detail: opts['va-et-vient'] ? `Va-et-vient (2 commandes)` : `Simple allumage`, coeff: '/', dtu: '/' });
+          if (opts['rj45']) {
+            mats.push({ nom: 'Prises RJ45', qte: 1, unite: 'prise',
+              detail: `Min 1 par pièce principale (réseau/TV) — câble Grade 2/3`, coeff: '/', dtu: 'NF C 15-100' });
+          }
+          mats.push({ nom: 'Boîtes d\'encastrement', qte: nbPrises + (opts['va-et-vient']?2:1) + (opts['rj45']?1:0), unite: 'boîtes',
+            detail: `1 par appareillage`, coeff: '/', dtu: '/' });
+          mats.push({ nom: 'Câble 1,5mm² (éclairage)', qte: Math.ceil(S * 2.5), unite: 'ml',
+            detail: `Circuit éclairage protégé 16A (10A possible)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Câble 2,5mm² (prises)', qte: Math.ceil(S * 4), unite: 'ml',
+            detail: `Circuit prises protégé 20A — max 8 prises/circuit`, coeff: '/', dtu: 'NF C 15-100' });
+        }
+
+        if (sys === 'cuisine') {
+          const totalPrises = 6 + (opts['ilot'] ? 2 : 0);
+          mats.push({ nom: 'Prises 16A cuisine', qte: totalPrises, unite: 'prises',
+            detail: `Min 6 dont 4 au-dessus du plan de travail${opts['ilot']?' + 2 îlot':''}`, coeff: '/', dtu: 'NF C 15-100 §cuisine' });
+          mats.push({ nom: 'Circuit spécialisé 32A (plaque)', qte: 1, unite: 'circuit',
+            detail: `Câble 6mm² — cuisson (plaque/piano)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Circuits spécialisés 20A', qte: 3, unite: 'circuits',
+            detail: `Four + lave-vaisselle + (lave-linge si cuisine) — câble 2,5mm² dédié chacun`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Circuit prises PDT 20A', qte: 1, unite: 'circuit',
+            detail: `Les 4+ prises plan de travail (≥ 2 circuits si > 6 prises)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Points lumineux', qte: 2, unite: 'points',
+            detail: `Plafond + sous-meuble plan de travail recommandé`, coeff: '/', dtu: '/' });
+        }
+
+        if (sys === 'salle-eau') {
+          mats.push({ nom: 'Prises 16A (hors volumes)', qte: 2, unite: 'prises',
+            detail: `Hors volume 0/1/2 — protégées 30mA`, coeff: '/', dtu: 'NF C 15-100 §volumes' });
+          mats.push({ nom: 'Liaison équipotentielle (LES)', qte: 1, unite: 'ensemble',
+            detail: `OBLIGATOIRE — relie toutes parties métalliques (tuyaux, huisseries)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Points lumineux IP', qte: 2, unite: 'points',
+            detail: `IP adapté au volume (IPx4 vol.2, IPx7 vol.1)`, coeff: '/', dtu: 'NF C 15-100' });
+          mats.push({ nom: 'Circuit dédié sèche-serviette', qte: 1, unite: 'circuit',
+            detail: `Si présent — protégé 30mA, hors volume 1`, coeff: '/', dtu: '/' });
+          mats.push({ nom: 'Câble 2,5mm² + 1,5mm²', qte: Math.ceil(D.surfaceNette * 6), unite: 'ml',
+            detail: `Prises + éclairage — tous circuits SdB sur DDR 30mA`, coeff: '/', dtu: 'NF C 15-100' });
+        }
+      }
+
+      if (sys === 'tableau') {
+        const S = D.surface_totale;
+        const nbP = D.nb_pieces;
+        let circuits = 0;
+        const detailCircuits = [];
+        const cEcl = Math.max(2, Math.ceil(nbP / 2)); circuits += cEcl; detailCircuits.push(`${cEcl} éclairage`);
+        const cPrises = Math.max(2, Math.ceil(S / 35)); circuits += cPrises; detailCircuits.push(`${cPrises} prises`);
+        circuits += 4; detailCircuits.push('4 spécialisés cuisine');
+        circuits += 1; detailCircuits.push('1 lave-linge');
+        if (D.chauffage_elec === 'oui') { const cCh = Math.max(1, Math.ceil(S / 35)); circuits += cCh; detailCircuits.push(`${cCh} chauffage`); }
+        const reserve = Math.ceil(circuits * 0.2);
+
+        mats.push({ nom: 'NOMBRE DE CIRCUITS estimé', qte: circuits, unite: 'circuits',
+          detail: detailCircuits.join(' · '), coeff: '≈', dtu: 'NF C 15-100' });
+        mats.push({ nom: 'Modules tableau (avec réserve 20%)', qte: circuits + reserve, unite: 'modules',
+          detail: `+20% de réserve OBLIGATOIRE (NF C 15-100)`, coeff: '+20%', dtu: 'NF C 15-100' });
+        const rangees = Math.ceil((circuits + reserve + 4) / 13);
+        mats.push({ nom: 'Tableau (rangées)', qte: rangees, unite: `rangées de 13`,
+          detail: `Inclut interrupteurs différentiels de tête`, coeff: '/', dtu: '/' });
+        mats.push({ nom: 'Interrupteurs différentiels 30mA', qte: Math.max(2, Math.ceil(circuits / 8)), unite: 'ID',
+          detail: `Type AC + au moins 1 type A (plaque/lave-linge) — max 8 disjoncteurs par ID`, coeff: '/', dtu: 'NF C 15-100' });
+        mats.push({ nom: 'Disjoncteurs divisionnaires', qte: circuits, unite: 'disjoncteurs',
+          detail: `10A (écl.) · 16/20A (prises) · 20A (spéc.) · 32A (plaque)`, coeff: '/', dtu: 'NF C 15-100' });
+        mats.push({ nom: 'Disjoncteur de branchement', qte: 1, unite: 'AGCP',
+          detail: `En tête — calibre selon abonnement (souvent 30/45/60A)`, coeff: '/', dtu: '/' });
+      }
+
+      return mats;
+    },
+    notes: (sys) => [
+      { dtu:true, text:'<strong>NF C 15-100 :</strong> tous les circuits doivent être protégés par dispositif différentiel 30 mA. Réserve de 20% minimum dans le tableau. Hauteur des prises : 5 cm mini du sol (25 cm pour 32A).' },
+      ...(sys === 'cuisine' ? [{ dtu:true, text:'<strong>Cuisine :</strong> circuit plaque dédié 32A (câble 6mm²), 6 prises minimum dont 4 sur le plan de travail à 8-25 cm au-dessus. Hotte sur prise dédiée recommandée.' }] : []),
+      ...(sys === 'salle-eau' ? [{ dtu:true, text:'<strong>Volumes de sécurité SdB :</strong> volume 0 (intérieur baignoire/douche) = aucun appareil ; volume 1 = TBTS 12V ; volume 2 = IPx4 + 30mA. Liaison équipotentielle obligatoire.' }] : []),
+      { dtu:false, text:'⚠️ Une installation neuve ou rénovée doit être validée par le CONSUEL avant mise sous tension par Enedis. En cas de doute, faire intervenir un électricien qualifié.' },
+    ],
+    viz: 'electricite'
+  },
 };
 
 // ════════════════════════════════════════════════════════════
@@ -1575,7 +2046,8 @@ const PRICE_DB = [
   { rx: /mortier de montage/i, pu: 8.5, par: 'sac 35kg' },
   { rx: /armature|chaînage/i, pu: 3.5, par: 'ml' },
   { rx: /arase étanche/i, pu: 1.5, par: 'ml' },
-  { rx: /eau/i, pu: 0.004, par: 'litre' },
+  { rx: /béton de remplissage|béton c25\/30/i, pu: 145.0, par: 'm³' },
+  { rx: /eau de gâchage|^eau$/i, pu: 0.004, par: 'litre' },
   // Carrelage
   { rx: /carreaux/i, pu: 25.0, par: 'm²' },
   { rx: /colle c2s1/i, pu: 22.0, par: 'sac 25kg' },
@@ -1603,6 +2075,42 @@ const PRICE_DB = [
   { rx: /bâche/i, pu: 5.0, par: 'pièce' },
   { rx: /baguettes/i, pu: 1.8, par: 'ml' },
   { rx: /échafaudage/i, pu: 6.0, par: 'm²/sem' },
+  // Structure béton
+  { rx: /acier ha/i, pu: 1.6, par: 'kg' },
+  { rx: /cadres|étriers/i, pu: 1.2, par: 'pièce' },
+  { rx: /coffrage/i, pu: 18.0, par: 'm²' },
+  { rx: /étais/i, pu: 4.0, par: 'étai/mois' },
+  // Bois
+  { rx: /solives i-joist|lvl/i, pu: 28.0, par: 'solive' },
+  { rx: /solives.*c24|solives \d/i, pu: 14.0, par: 'solive' },
+  { rx: /volume bois/i, pu: 450.0, par: 'm³' },
+  { rx: /muraillère|lisse d'appui/i, pu: 6.0, par: 'ml' },
+  { rx: /sabots|étriers métalliques/i, pu: 3.5, par: 'sabot' },
+  { rx: /solives de chevêtre|solives doubl/i, pu: 18.0, par: 'solive' },
+  { rx: /panneaux osb/i, pu: 22.0, par: 'panneau' },
+  { rx: /vis plancher/i, pu: 0.08, par: 'vis' },
+  { rx: /colle pu/i, pu: 9.0, par: 'cartouche' },
+  // Chauffage
+  { rx: /radiateurs eau/i, pu: 180.0, par: 'radiateur' },
+  { rx: /radiateurs électriques/i, pu: 250.0, par: 'radiateur' },
+  { rx: /robinets thermostatiques/i, pu: 18.0, par: 'pièce' },
+  { rx: /tube multicouche|tube per/i, pu: 2.5, par: 'ml' },
+  { rx: /collecteur/i, pu: 90.0, par: 'boucle' },
+  // Électricité
+  { rx: /prises 16a|prises rj45|prises cuisine/i, pu: 8.0, par: 'prise' },
+  { rx: /points lumineux/i, pu: 12.0, par: 'point' },
+  { rx: /interrupteur/i, pu: 9.0, par: 'pièce' },
+  { rx: /boîtes d'encastrement/i, pu: 1.2, par: 'boîte' },
+  { rx: /câble 6mm/i, pu: 3.5, par: 'ml' },
+  { rx: /câble 2,5mm|câble 1,5mm|câble 2,5mm² \+/i, pu: 1.2, par: 'ml' },
+  { rx: /circuit spécialisé|circuits spécialisés|circuit prises|circuit dédié|circuits dédiés/i, pu: 25.0, par: 'circuit' },
+  { rx: /liaison équipotentielle/i, pu: 35.0, par: 'ensemble' },
+  { rx: /modules tableau/i, pu: 6.0, par: 'module' },
+  { rx: /tableau \(rangées\)/i, pu: 45.0, par: 'rangée' },
+  { rx: /interrupteurs différentiels|^id /i, pu: 65.0, par: 'ID' },
+  { rx: /disjoncteurs divisionnaires|disjoncteur/i, pu: 12.0, par: 'disjoncteur' },
+  { rx: /vis \+ enduit \+ bandes/i, pu: 14.0, par: 'sac 25kg' },
+  { rx: /disjoncteur de branchement|agcp/i, pu: 90.0, par: 'AGCP' },
 ];
 
 function matchPrice(nom) {
@@ -1890,6 +2398,10 @@ function drawViz() {
   else if (type === 'cloison') drawCloison(ctx, canvas);
   else if (type === 'dalle') drawDalle(ctx, canvas);
   else if (type === 'plafond') drawPlafond(ctx, canvas);
+  else if (type === 'structure') drawStructure(ctx, canvas);
+  else if (type === 'plancher-bois') drawPlancherBois(ctx, canvas);
+  else if (type === 'piece') drawPiece(ctx, canvas);
+  else if (type === 'electricite') drawElec(ctx, canvas);
   else drawMur(ctx, canvas);
 
   updateVizTags();
@@ -2072,6 +2584,162 @@ function drawPlafond(ctx, canvas) {
 
   ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
   ctx.fillText(`${getDim('longueur')||'?'} × ${getDim('largeur')||'?'} m`, ox+w/2+d*0.3, oy+20);
+}
+
+function drawStructure(ctx, canvas) {
+  const W = canvas.width, Hc = canvas.height;
+  if (currentSysteme === 'poteau') {
+    const H = getDim('hauteur') || 2.5;
+    const h = Math.min(130, H * 38);
+    const w = 38;
+    const ox = W/2 - w/2, oy = Hc/2 + h/2 - 5;
+    ctx.fillStyle = '#9AA3AC'; ctx.fillRect(ox, oy-h, w, h);
+    ctx.strokeStyle = '#E8610A'; ctx.lineWidth = 1.5;
+    [0.25, 0.5, 0.75].forEach(f => {
+      ctx.beginPath(); ctx.moveTo(ox+w*f, oy); ctx.lineTo(ox+w*f, oy-h); ctx.stroke();
+    });
+    ctx.strokeStyle = '#C2562A'; ctx.lineWidth = 1;
+    for (let y = oy-8; y > oy-h; y -= h/7) {
+      ctx.beginPath(); ctx.moveTo(ox+4, y); ctx.lineTo(ox+w-4, y); ctx.stroke();
+    }
+    ctx.strokeStyle = '#3A4450'; ctx.lineWidth = 1.5; ctx.strokeRect(ox, oy-h, w, h);
+    ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
+    ctx.fillText(`H = ${getDim('hauteur')||'?'} m`, ox+w/2, oy+18);
+  } else {
+    const L = getDim('longueur') || 4;
+    const w = Math.min(300, L * 45);
+    const h = currentSysteme === 'dalle-pleine' ? 26 : 44;
+    const ox = W/2 - w/2, oy = Hc/2;
+    ctx.fillStyle = '#9AA3AC'; ctx.fillRect(ox, oy-h/2, w, h);
+    ctx.strokeStyle = '#E8610A'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(ox+4, oy+h/2-5); ctx.lineTo(ox+w-4, oy+h/2-5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox+4, oy-h/2+5); ctx.lineTo(ox+w-4, oy-h/2+5); ctx.stroke();
+    if (currentSysteme !== 'dalle-pleine') {
+      ctx.strokeStyle = '#C2562A'; ctx.lineWidth = 1;
+      for (let x = ox+10; x < ox+w; x += w/10) {
+        ctx.beginPath(); ctx.moveTo(x, oy-h/2+4); ctx.lineTo(x, oy+h/2-4); ctx.stroke();
+      }
+    }
+    ctx.fillStyle = '#5C6670';
+    ctx.fillRect(ox-12, oy-h/2, 12, h+18);
+    ctx.fillRect(ox+w, oy-h/2, 12, h+18);
+    ctx.strokeStyle = '#3A4450'; ctx.lineWidth = 1.5; ctx.strokeRect(ox, oy-h/2, w, h);
+    ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
+    ctx.fillText(`Portée = ${getDim('longueur')||'?'} m`, ox+w/2, oy+h/2+28);
+  }
+  ctx.fillStyle = '#C8D0D8'; ctx.font = '600 9px Inter'; ctx.textAlign = 'center';
+  ctx.fillText('⚠ SECTION INDICATIVE — VALIDATION BE', W/2, 16);
+}
+
+function drawPlancherBois(ctx, canvas) {
+  const W = canvas.width, Hc = canvas.height;
+  const L = getDim('longueur') || 4, lg = getDim('largeur') || 3;
+  const entraxe = parseFloat(getDim('entraxe')) || 0.5;
+  const w = Math.min(280, L * 40), d = Math.min(90, lg * 22);
+  const ox = W/2 - w/2 - d*0.3, oy = Hc/2 + 30;
+
+  const nbSol = Math.max(2, Math.min(12, Math.round(lg / entraxe)));
+  for (let i = 0; i <= nbSol; i++) {
+    const f = i / nbSol;
+    ctx.strokeStyle = '#B5915E'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(ox + d*0.6*f, oy - d*0.4*f); ctx.lineTo(ox + w + d*0.6*f, oy - d*0.4*f); ctx.stroke();
+  }
+  ctx.strokeStyle = '#8A6D42'; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + d*0.6, oy - d*0.4); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox+w, oy); ctx.lineTo(ox+w + d*0.6, oy - d*0.4); ctx.stroke();
+
+  ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
+  ctx.fillText(`Portée ${getDim('longueur')||'?'} m · ${nbSol} solives`, ox+w/2+d*0.3, oy+24);
+  ctx.fillStyle = '#C8D0D8'; ctx.font = '600 9px Inter';
+  ctx.fillText('⚠ SECTION INDICATIVE — abaque habitation', W/2, 16);
+}
+
+function drawPiece(ctx, canvas) {
+  const W = canvas.width, Hc = canvas.height;
+  const L = getDim('longueur') || 4, lg = getDim('largeur') || 3, h = getDim('hauteur') || 2.5;
+  const scale = Math.min(1, 9 / Math.max(L, lg));
+  const w = Math.min(220, L * scale * 30), d = Math.min(90, lg * scale * 20);
+  const ht = Math.min(90, h * 28);
+  const ox = W/2 - w/2 - d*0.3, oy = Hc/2 + ht/2;
+
+  ctx.fillStyle = '#E8E0D4';
+  ctx.beginPath();
+  ctx.moveTo(ox, oy); ctx.lineTo(ox+w, oy);
+  ctx.lineTo(ox+w+d*0.6, oy-d*0.4); ctx.lineTo(ox+d*0.6, oy-d*0.4);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#D4CFC8';
+  ctx.beginPath();
+  ctx.moveTo(ox+d*0.6, oy-d*0.4); ctx.lineTo(ox+w+d*0.6, oy-d*0.4);
+  ctx.lineTo(ox+w+d*0.6, oy-d*0.4-ht); ctx.lineTo(ox+d*0.6, oy-d*0.4-ht);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#C8C0B4';
+  ctx.beginPath();
+  ctx.moveTo(ox, oy); ctx.lineTo(ox+d*0.6, oy-d*0.4);
+  ctx.lineTo(ox+d*0.6, oy-d*0.4-ht); ctx.lineTo(ox, oy-ht);
+  ctx.closePath(); ctx.fill();
+
+  ctx.fillStyle = '#E8610A';
+  const rw = w*0.4, rh = ht*0.35;
+  const rx = ox + d*0.6 + w*0.3, ry = oy-d*0.4 - rh - 6;
+  ctx.fillRect(rx, ry, rw, rh);
+  ctx.strokeStyle = '#FAFAF8'; ctx.lineWidth = 1;
+  for (let i = 1; i < 5; i++) {
+    ctx.beginPath(); ctx.moveTo(rx + rw*i/5, ry); ctx.lineTo(rx + rw*i/5, ry+rh); ctx.stroke();
+  }
+  ctx.strokeStyle = '#F5A623'; ctx.lineWidth = 1.5;
+  for (let i = 0; i < 3; i++) {
+    const wy = ry - 6 - i*6;
+    ctx.beginPath();
+    ctx.moveTo(rx+rw*0.2, wy);
+    ctx.quadraticCurveTo(rx+rw*0.35, wy-4, rx+rw*0.5, wy);
+    ctx.quadraticCurveTo(rx+rw*0.65, wy+4, rx+rw*0.8, wy);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#C8D0D8'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
+  const vol = (L*lg*h).toFixed(1);
+  ctx.fillText(`${L} × ${lg} × ${h} m  =  ${vol} m³`, W/2, Hc-10);
+}
+
+function drawElec(ctx, canvas) {
+  const W = canvas.width, Hc = canvas.height;
+  ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
+
+  if (currentSysteme === 'tableau') {
+    const tw = 200, th = 110;
+    const ox = W/2 - tw/2, oy = Hc/2 - th/2;
+    ctx.fillStyle = '#2C3640'; ctx.fillRect(ox, oy, tw, th);
+    ctx.fillStyle = '#1A2229'; ctx.fillRect(ox+8, oy+8, tw-16, th-16);
+    for (let r = 0; r < 3; r++) {
+      const ry = oy + 16 + r * 30;
+      ctx.fillStyle = '#E8E3DC'; ctx.fillRect(ox+16, ry, tw-32, 20);
+      ctx.fillStyle = '#1A2229';
+      for (let m = 1; m < 11; m++) ctx.fillRect(ox+16 + (tw-32)*m/11, ry, 1.5, 20);
+      ctx.fillStyle = '#E8610A';
+      for (let m = 0; m < 10; m++) ctx.fillRect(ox+18 + (tw-32)*m/11 + 4, ry+6, 6, 8);
+    }
+    ctx.strokeStyle = '#0F1419'; ctx.lineWidth = 2; ctx.strokeRect(ox, oy, tw, th);
+    ctx.fillStyle = '#C8D0D8';
+    ctx.fillText(`Tableau ${getDim('surface_totale')||'?'} m² · ${getDim('nb_pieces')||'?'} pièces`, W/2, oy+th+22);
+  } else {
+    const L = getDim('longueur') || 4, lg = getDim('largeur') || 3;
+    const w = Math.min(240, L * 40), h = Math.min(120, lg * 35);
+    const ox = W/2 - w/2, oy = Hc/2 - h/2;
+    ctx.fillStyle = '#E8E0D4'; ctx.fillRect(ox, oy, w, h);
+    ctx.strokeStyle = '#8C8880'; ctx.lineWidth = 1.5; ctx.strokeRect(ox, oy, w, h);
+    ctx.fillStyle = '#1C2B3A';
+    const prises = [[0.2,1],[0.5,1],[0.8,1],[0,0.5],[1,0.5],[0.5,0]];
+    prises.forEach(([fx,fy]) => {
+      const px = ox + w*fx, py = oy + h*fy;
+      ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = '#E8610A';
+    ctx.beginPath(); ctx.arc(ox+w/2, oy+h/2, 8, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#FAFAF8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(ox+w/2-5, oy+h/2-5); ctx.lineTo(ox+w/2+5, oy+h/2+5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox+w/2+5, oy+h/2-5); ctx.lineTo(ox+w/2-5, oy+h/2+5); ctx.stroke();
+    ctx.fillStyle = '#C8D0D8'; ctx.font = '600 11px Inter';
+    ctx.fillText(`${L} × ${lg} m = ${(L*lg).toFixed(1)} m²`, W/2, oy+h+22);
+  }
 }
 
 function drawMur(ctx, canvas) {
