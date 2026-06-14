@@ -566,14 +566,106 @@
     .main { grid-template-columns: 1fr; padding: 14px; }
     .materials-grid { grid-template-columns: 1fr; }
   }
+/* ── Barre projet + Plan ── */
+.header-title { flex: 1; }
+.project-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.project-lbl { font: 700 11px Rajdhani, sans-serif; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+#project-select { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.22); border-radius: 7px; padding: 6px 9px; font: 600 13px Inter, sans-serif; max-width: 170px; }
+#project-select option { color: #1C2B3A; }
+.pj-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.22); border-radius: 7px; padding: 6px 9px; cursor: pointer; font: 600 13px Inter, sans-serif; line-height: 1; }
+.pj-btn:hover { background: rgba(255,255,255,0.22); }
+.pj-btn.plan-open { background: #E8610A; border-color: #E8610A; font-weight: 700; }
+.pj-btn.plan-open:hover { background: #cf5408; }
+
+.plan-modal { display: none; position: fixed; inset: 0; background: rgba(15,20,25,0.72); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+.plan-box { background: #F4F1EB; border-radius: 16px; width: 100%; max-width: 880px; max-height: 92vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
+.plan-topbar { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: #1C2B3A; color: #fff; }
+.plan-title { font: 700 17px Rajdhani, sans-serif; letter-spacing: .02em; }
+.plan-sub { font: 600 12px Inter, sans-serif; opacity: .8; margin-top: 2px; }
+.plan-close { background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 8px; width: 34px; height: 34px; font-size: 16px; cursor: pointer; }
+.plan-close:hover { background: rgba(255,255,255,0.3); }
+.plan-content { display: flex; gap: 16px; padding: 16px 20px; overflow: auto; }
+.plan-left { flex: 0 0 372px; }
+.plan-right { flex: 1; min-width: 0; }
+
+.room-form { background: #fff; border: 1px solid #E0DACE; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+.rf-title { font: 700 13px Rajdhani, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: #5C6670; margin-bottom: 10px; }
+.room-form input, .room-form select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #D6CFC2; border-radius: 8px; font: 500 13px Inter, sans-serif; margin-bottom: 8px; background: #FBFAF7; }
+.rf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.btn-add-room { width: 100%; background: #1C2B3A; color: #fff; border: none; border-radius: 8px; padding: 10px; font: 700 13px Inter, sans-serif; cursor: pointer; margin-top: 2px; }
+.btn-add-room:hover { background: #2a3f54; }
+#plan-canvas { width: 100%; height: auto; background: #fff; border: 1px solid #E0DACE; border-radius: 12px; }
+
+.room-card { background: #fff; border: 1px solid #E0DACE; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
+.room-head { display: flex; justify-content: space-between; align-items: center; }
+.room-name { font: 700 15px Rajdhani, sans-serif; letter-spacing: .02em; color: #1C2B3A; }
+.room-del { background: none; border: none; color: #B04A3A; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+.room-meta { font: 500 11px Inter, sans-serif; color: #8A929B; margin: 3px 0 8px; }
+.room-stats { display: flex; gap: 12px; flex-wrap: wrap; font: 500 12px Inter, sans-serif; color: #5C6670; margin-bottom: 10px; }
+.room-stats b { color: #E8610A; font-weight: 700; }
+.room-af { display: flex; gap: 8px; }
+.room-af select { flex: 1; min-width: 0; padding: 8px; border: 1px solid #D6CFC2; border-radius: 8px; font: 500 12px Inter, sans-serif; background: #FBFAF7; }
+.btn-af { background: #E8610A; color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font: 700 12px Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+.btn-af:hover { background: #cf5408; }
+.plan-empty { text-align: center; color: #8A929B; font: 500 13px Inter, sans-serif; padding: 30px 10px; }
+@media (max-width: 720px){ .plan-content { flex-direction: column; } .plan-left { flex: none; } }
 </style>
 </head>
 <body>
 
+<div id="plan-modal" class="plan-modal">
+  <div class="plan-box">
+    <div class="plan-topbar">
+      <div>
+        <div class="plan-title">📐 Plan — <span id="plan-project-name"></span></div>
+        <div class="plan-sub" id="plan-total"></div>
+      </div>
+      <button class="plan-close" onclick="closePlan()">✕</button>
+    </div>
+
+    <div class="plan-content">
+      <div class="plan-left">
+        <div class="room-form" id="room-form">
+          <div class="rf-title">Ajouter une pièce</div>
+          <input id="room-nom" type="text" placeholder="Nom (ex. Salon)">
+          <div class="rf-grid">
+            <select id="room-forme" onchange="toggleRoomForm()">
+              <option value="rect">Rectangle</option>
+              <option value="L">Forme en L</option>
+            </select>
+            <input id="room-h" type="number" step="0.01" placeholder="Hauteur 2.50">
+          </div>
+          <div class="rf-grid">
+            <input id="room-L" type="number" step="0.01" placeholder="Longueur (m)">
+            <input id="room-l" type="number" step="0.01" placeholder="Largeur (m)">
+          </div>
+          <div class="rf-grid" id="room-L-coin" style="display:none">
+            <input id="room-a" type="number" step="0.01" placeholder="Coin retiré a (m)">
+            <input id="room-b" type="number" step="0.01" placeholder="Coin retiré b (m)">
+          </div>
+          <button class="btn-add-room" onclick="addRoom()">+ Ajouter la pièce</button>
+        </div>
+        <canvas id="plan-canvas" width="360" height="240"></canvas>
+      </div>
+      <div class="plan-right">
+        <div id="rooms-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <header>
   <div class="logo-icon"></div>
-  <div>
+  <div class="header-title">
     <h1>Calepin de Chantier <span class="vtag">métrés & conseils</span></h1>
+  </div>
+  <div class="project-bar">
+    <span class="project-lbl">Projet</span>
+    <select id="project-select" onchange="switchProject(this.value)"></select>
+    <button class="pj-btn" title="Nouveau projet" onclick="createProject()">＋</button>
+    <button class="pj-btn" title="Renommer" onclick="renameProject()">✎</button>
+    <button class="pj-btn" title="Supprimer" onclick="deleteProject()">🗑</button>
+    <button class="pj-btn plan-open" onclick="openPlan()">📐 Plan</button>
   </div>
 </header>
 
@@ -2627,47 +2719,47 @@ function drawCloison(ctx,canvas){
 }
 
 
-function drawDalle(ctx, canvas) {
-  const W = canvas.width, Hc = canvas.height;
-  const L = getDim('longueur') || 5, lg = getDim('largeur') || 4;
-  const scale = Math.min(1, 10 / Math.max(L, lg));
-  const w = Math.min(240, L * scale * 28), d = Math.min(120, lg * scale * 18);
-  const th = 16;
-  const ox = W/2 - w/2 - d*0.3, oy = Hc/2 + 22;
-
-  ctx.fillStyle = '#C8C0B4';
-  ctx.beginPath();
-  ctx.moveTo(ox, oy); ctx.lineTo(ox+w, oy);
-  ctx.lineTo(ox+w+d*0.6, oy-d*0.4); ctx.lineTo(ox+d*0.6, oy-d*0.4);
-  ctx.closePath(); ctx.fill();
-
-  ctx.fillStyle = '#A8A09A'; ctx.fillRect(ox, oy, w, th);
-
-  ctx.fillStyle = '#B8B0A4';
-  ctx.beginPath();
-  ctx.moveTo(ox+w, oy); ctx.lineTo(ox+w+d*0.6, oy-d*0.4);
-  ctx.lineTo(ox+w+d*0.6, oy-d*0.4+th); ctx.lineTo(ox+w, oy+th);
-  ctx.closePath(); ctx.fill();
-
-  ctx.strokeStyle = '#8C8880'; ctx.lineWidth = 0.6;
-  const cols = Math.min(6, Math.round(L * 1.5)), rows = Math.min(4, Math.round(lg * 1.5));
-  for (let i = 1; i < cols; i++) {
-    const x = ox + w * i / cols;
-    ctx.beginPath(); ctx.moveTo(x, oy); ctx.lineTo(x + d*0.6, oy-d*0.4); ctx.stroke();
+function drawDalle(ctx,canvas){
+  const W=canvas.width,Hc=canvas.height,sys=currentSysteme,mod=currentOuvrage;
+  const totalW=Math.min(W-56,290),x0=W/2-totalW/2;
+  let layers=[];
+  if(mod==='dalle-beton'){
+    layers=[{h:20,kind:'hatch',color:'#8A8175',label:'Hérisson / grave'},
+            {h:5,kind:'film',color:'#5BA7C7',label:'Film polyane'},
+            {h:16,kind:'wool',label:'Isolant'},
+            {h:26,kind:'slab',color:'#AEB4BA',label:'Dalle béton + treillis'}];
+  }else if(mod==='chape'){
+    layers=[{h:30,kind:'hatch',color:'#8A8175',label:'Dalle support'}];
+    if(sys==='flottante')layers.push({h:16,kind:'wool',label:'Isolant'});
+    if(sys==='desolidarisee'||sys==='flottante')layers.push({h:5,kind:'film',color:'#5BA7C7',label:'Film polyane'});
+    layers.push({h:(sys==='liquide')?14:20,kind:'screed',color:'#CFC8BC',label:(sys==='liquide')?'Chape fluide':'Chape'});
+  }else{
+    if(sys==='douche')layers=[{h:28,kind:'hatch',color:'#8A8175',label:'Support'},{h:7,kind:'band',color:'#7FB0A0',label:'SPEC étanchéité'},{h:9,kind:'comb',color:'#C9A98A',label:'Colle'},{h:12,kind:'tile',color:'#E7E2DA',label:'Carreau'}];
+    else layers=[{h:30,kind:'hatch',color:'#8A8175',label:(sys==='mur')?'Mur support':'Support / chape'},{h:9,kind:'comb',color:'#C9A98A',label:'Colle peigne'},{h:12,kind:'tile',color:'#E7E2DA',label:'Carreau'}];
   }
-  for (let j = 1; j < rows; j++) {
-    const dx = d*0.6*j/rows, dy = d*0.4*j/rows;
-    ctx.beginPath(); ctx.moveTo(ox+dx, oy-dy); ctx.lineTo(ox+w+dx, oy-dy); ctx.stroke();
-  }
-
-  ctx.strokeStyle = '#6C6860'; ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.moveTo(ox, oy+th); ctx.lineTo(ox, oy); ctx.lineTo(ox+d*0.6, oy-d*0.4);
-  ctx.lineTo(ox+w+d*0.6, oy-d*0.4); ctx.lineTo(ox+w+d*0.6, oy-d*0.4+th);
-  ctx.lineTo(ox+w, oy+th); ctx.closePath(); ctx.stroke();
-
-  ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
-  ctx.fillText(`${getDim('longueur')||'?'} × ${getDim('largeur')||'?'} m`, ox+w/2, oy+th+18);
+  const sumH=layers.reduce((a,l)=>a+l.h,0);
+  const k=Math.min(1.5,Math.min(150,Hc*0.55)/sumH);
+  const totH=sumH*k,yBottom=Hc/2+totH/2-6,yTop=yBottom-totH;
+  let y=yBottom;const items=[];
+  layers.forEach(l=>{
+    const hh=l.h*k,top=y-hh;
+    if(l.kind==='hatch'){ctx.fillStyle=l.color;ctx.fillRect(x0,top,totalW,hh);_hatch(ctx,x0,top,totalW,hh,'rgba(255,255,255,0.14)',7);}
+    else if(l.kind==='wool')_wool(ctx,x0,top,totalW,hh);
+    else if(l.kind==='slab'){ctx.fillStyle=l.color;ctx.fillRect(x0,top,totalW,hh);ctx.fillStyle='#7D8389';for(let xx=x0+10;xx<x0+totalW-4;xx+=15){ctx.beginPath();ctx.arc(xx,top+hh*0.5,1.6,0,7);ctx.fill();}}
+    else if(l.kind==='comb'){ctx.fillStyle=l.color;ctx.fillRect(x0,top,totalW,hh);ctx.strokeStyle='rgba(0,0,0,0.18)';ctx.lineWidth=1;for(let xx=x0+4;xx<x0+totalW;xx+=6){ctx.beginPath();ctx.moveTo(xx,top+hh);ctx.lineTo(xx+3,top);ctx.stroke();}}
+    else if(l.kind==='tile'){ctx.fillStyle=l.color;ctx.fillRect(x0,top,totalW,hh);ctx.strokeStyle='#B8B0A4';ctx.lineWidth=1;const step=Math.max(24,totalW/8);for(let xx=x0;xx<=x0+totalW;xx+=step){ctx.beginPath();ctx.moveTo(xx,top);ctx.lineTo(xx,top+hh);ctx.stroke();}}
+    else{ctx.fillStyle=l.color;ctx.fillRect(x0,top,totalW,hh);}
+    ctx.strokeStyle='rgba(0,0,0,0.12)';ctx.lineWidth=0.5;ctx.strokeRect(x0,top,totalW,hh);
+    items.unshift({color:(l.kind==='wool')?'#F2D98A':l.color,label:l.label});
+    y=top;
+  });
+  ctx.strokeStyle='#6C6860';ctx.lineWidth=1.3;ctx.strokeRect(x0,yTop,totalW,totH);
+  const sysName=OUVRAGES[mod].systemes.find(s=>s.id===sys).nom;
+  ctx.fillStyle='#E8610A';ctx.font='700 12px Inter';ctx.textAlign='center';ctx.fillText(sysName,W/2,yTop-10);
+  _legend(ctx,items,W/2,yBottom+14);
+  ctx.fillStyle='#8A929B';ctx.font='600 10px Inter';ctx.textAlign='center';
+  const dimTxt=(sys==='mur')?`${getDim('longueur')||'?'} x ${getDim('hauteur')||'?'} m`:`${getDim('longueur')||'?'} x ${getDim('largeur')||'?'} m`;
+  ctx.fillText(dimTxt,W/2,Hc-6);
 }
 
 function drawPlafond(ctx,canvas){
@@ -2922,45 +3014,244 @@ function drawEscalier(ctx, canvas) {
   ctx.fillText(`${nbMarches} marches · h ${h.toFixed(1)} · g ${g.toFixed(1)} cm`, W/2, 18);
 }
 
-function drawMur(ctx, canvas) {
-  const W = canvas.width, Hc = canvas.height;
-  const L = getDim('longueur') || 5, ht = getDim('hauteur') || 2.5;
-  const w = Math.min(320, L * 36), h = Math.min(135, ht * 36);
-  const ox = W/2 - w/2, oy = Hc/2 + h/2 - 12;
-
-  ctx.fillStyle = '#E0D8CC'; ctx.fillRect(ox, oy-h, w, h);
-
-  if (currentOuvrage === 'parpaing') {
-    // Appareillage blocs
-    ctx.strokeStyle = '#B0A89C'; ctx.lineWidth = 0.8;
-    const rh = h / Math.max(3, Math.round(ht / 0.2) / 2.5);
-    let row = 0;
-    for (let y = oy; y > oy - h; y -= rh) {
-      ctx.beginPath(); ctx.moveTo(ox, y); ctx.lineTo(ox+w, y); ctx.stroke();
-      const bw = w / Math.max(2, Math.round(L / 0.5));
-      const offset = (row % 2) * bw / 2;
-      for (let x = ox + offset; x < ox + w; x += bw) {
-        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, Math.max(y - rh, oy - h)); ctx.stroke();
-      }
-      row++;
+function drawMur(ctx,canvas){
+  const W=canvas.width,Hc=canvas.height,sys=currentSysteme,mod=currentOuvrage;
+  if(mod==='parpaing'){
+    const epLabel={b20:'20 cm',b15:'15 cm',b10:'10 cm'}[sys]||'';
+    const w=Math.min(W-60,300),h=Math.min(Hc*0.5,130);
+    const x0=W/2-w/2,y0=Hc/2-h/2;
+    ctx.fillStyle='#D9CDBB';ctx.fillRect(x0,y0,w,h);
+    const rows=6,rh=h/rows,bw=w/5;
+    ctx.strokeStyle='#A89C88';ctx.lineWidth=1;
+    for(let r=0;r<rows;r++){
+      const y=y0+r*rh;
+      ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+w,y);ctx.stroke();
+      const off=(r%2)*bw/2;
+      for(let x=x0+off;x<x0+w+1;x+=bw){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,Math.min(y+rh,y0+h));ctx.stroke();}
     }
-  } else {
-    ctx.strokeStyle = '#D0C8BC'; ctx.lineWidth = 0.5;
-    for (let y = oy-h+10; y < oy; y += 12) {
-      ctx.beginPath(); ctx.moveTo(ox+5, y); ctx.lineTo(ox+w-5, y); ctx.stroke();
-    }
+    ctx.strokeStyle='#6C6860';ctx.lineWidth=1.4;ctx.strokeRect(x0,y0,w,h);
+    const sysName=OUVRAGES['parpaing'].systemes.find(s=>s.id===sys).nom;
+    ctx.fillStyle='#E8610A';ctx.font='700 12px Inter';ctx.textAlign='center';ctx.fillText(sysName,W/2,y0-10);
+    _legend(ctx,[{color:'#D9CDBB',label:'Blocs béton'},{color:'#A89C88',label:'Joints mortier 1 cm'},{color:'#E8610A',label:'Épaisseur '+epLabel}],W/2,y0+h+16);
+    ctx.fillStyle='#8A929B';ctx.font='600 10px Inter';ctx.fillText(`${getDim('longueur')||'?'} x ${getDim('hauteur')||'?'} m`,W/2,Hc-6);
+    return;
   }
+  const bandH=Math.min(96,Hc*0.42),totalW=Math.min(W-44,300);
+  const x0=W/2-totalW/2,y0=Hc/2-bandH/2-2,wSup=totalW*0.42;
+  ctx.fillStyle='#8A8175';ctx.fillRect(x0,y0,wSup,bandH);_hatch(ctx,x0,y0,wSup,bandH,'rgba(255,255,255,0.14)',7);
+  let x=x0+wSup;const items=[{color:'#8A8175',label:'Mur support'}];
+  let coats;
+  if(mod==='enduit'){
+    if(sys==='traditionnel')coats=[{c:'#C9BBA0',l:'Gobetis'},{c:'#D8CDB6',l:'Corps'},{c:'#E7E0CF',l:'Finition'}];
+    else if(sys==='chaux')coats=[{c:'#D8CDB6',l:'Chaux corps'},{c:'#ECE6D8',l:'Chaux finition'}];
+    else coats=[{c:'#DCD2BE',l:'Monocouche'}];
+  }else{
+    coats=[{c:'#CFD6DA',l:'Primaire'}];
+    const n=(sys==='finition-c')?1:2;
+    for(let i=0;i<n;i++)coats.push({c:'#EDEAE4',l:'Peinture '+(i+1)});
+  }
+  const wCoat=(totalW-wSup)/coats.length;
+  coats.forEach(co=>{ctx.fillStyle=co.c;ctx.fillRect(x,y0,wCoat,bandH);ctx.strokeStyle='rgba(0,0,0,0.1)';ctx.lineWidth=0.5;ctx.strokeRect(x,y0,wCoat,bandH);x+=wCoat;items.push({color:co.c,label:co.l});});
+  ctx.strokeStyle='#8C8880';ctx.lineWidth=1.2;ctx.strokeRect(x0,y0,totalW,bandH);
+  const sysName=OUVRAGES[mod].systemes.find(s=>s.id===sys).nom;
+  ctx.fillStyle='#E8610A';ctx.font='700 12px Inter';ctx.textAlign='center';ctx.fillText(sysName,W/2,y0-10);
+  _legend(ctx,items,W/2,y0+bandH+16);
+  ctx.fillStyle='#8A929B';ctx.font='600 10px Inter';ctx.fillText(`${getDim('longueur')||'?'} x ${getDim('hauteur')||'?'} m`,W/2,Hc-6);
+}
 
-  ctx.strokeStyle = '#8C8880'; ctx.lineWidth = 1.5;
-  ctx.strokeRect(ox, oy-h, w, h);
+// ════════════════════════════════════════════════════════════
+// PROJETS + PLAN + AUTO-REMPLISSAGE
+// ════════════════════════════════════════════════════════════
+let projects = [];
+let currentProjectId = null;
+const LS_KEY = 'calepin_projects_v1';
 
-  ctx.fillStyle = '#E8610A'; ctx.font = '600 11px Inter'; ctx.textAlign = 'center';
-  ctx.fillText(`${getDim('longueur')||'?'} m × ${getDim('hauteur')||'?'} m`, ox+w/2, oy+18);
+function newProjectObj(nom){ return { id:'p'+Date.now()+Math.floor(Math.random()*1000), nom, rooms:[], createdAt:Date.now() }; }
+function currentProject(){ return projects.find(p => p.id === currentProjectId); }
+
+function loadProjects(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ const d = JSON.parse(raw); projects = d.projects || []; currentProjectId = d.current || null; }
+  }catch(e){ projects = []; }
+  if(!projects.length){ const p = newProjectObj('Mon projet'); projects.push(p); currentProjectId = p.id; saveProjects(); }
+  if(!projects.find(p => p.id === currentProjectId)) currentProjectId = projects[0].id;
+}
+function saveProjects(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({ projects, current: currentProjectId })); }catch(e){}
+}
+
+function createProject(){
+  const nom = prompt('Nom du nouveau projet :', 'Projet ' + (projects.length + 1));
+  if(!nom || !nom.trim()) return;
+  const p = newProjectObj(nom.trim()); projects.push(p); currentProjectId = p.id;
+  saveProjects(); renderProjectBar(); renderRooms();
+}
+function switchProject(id){ currentProjectId = id; saveProjects(); renderProjectBar(); renderRooms(); }
+function renameProject(){
+  const p = currentProject(); if(!p) return;
+  const nom = prompt('Renommer le projet :', p.nom);
+  if(nom && nom.trim()){ p.nom = nom.trim(); saveProjects(); renderProjectBar(); }
+}
+function deleteProject(){
+  if(projects.length <= 1){ alert('Il faut conserver au moins un projet.'); return; }
+  const p = currentProject();
+  if(!confirm('Supprimer le projet « ' + p.nom + ' » et toutes ses pièces ?')) return;
+  projects = projects.filter(x => x.id !== currentProjectId);
+  currentProjectId = projects[0].id;
+  saveProjects(); renderProjectBar(); renderRooms();
+}
+
+// ── Géométrie des pièces ──
+function roomSurface(r){ return r.forme === 'L' ? Math.max(0, r.L*r.l - r.a*r.b) : r.L*r.l; }
+function roomPerim(r){ return 2*(r.L + r.l); }
+function roomVolume(r){ return roomSurface(r) * (r.h || 2.5); }
+
+function _v(id){ const e = document.getElementById(id); return e ? e.value : ''; }
+function toggleRoomForm(){
+  const isL = document.getElementById('room-forme').value === 'L';
+  document.getElementById('room-L-coin').style.display = isL ? 'grid' : 'none';
+}
+function addRoom(){
+  const p = currentProject(); if(!p) return;
+  const forme = document.getElementById('room-forme').value;
+  const nom = (_v('room-nom') || '').trim() || 'Pièce ' + (p.rooms.length + 1);
+  const L = parseFloat(_v('room-L')) || 0, l = parseFloat(_v('room-l')) || 0, h = parseFloat(_v('room-h')) || 2.5;
+  const a = parseFloat(_v('room-a')) || 0, b = parseFloat(_v('room-b')) || 0;
+  if(L <= 0 || l <= 0){ alert('Renseigne au moins la longueur et la largeur.'); return; }
+  if(forme === 'L' && (a <= 0 || b <= 0)){ alert('Pour une forme en L, renseigne le coin retiré (a et b).'); return; }
+  p.rooms.push({ id:'r'+Date.now()+Math.floor(Math.random()*1000), nom, forme, L, l, a, b, h });
+  saveProjects();
+  ['room-nom','room-L','room-l','room-a','room-b'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  renderRooms();
+}
+function deleteRoom(id){
+  const p = currentProject(); p.rooms = p.rooms.filter(r => r.id !== id);
+  saveProjects(); renderRooms();
+}
+
+// ── Auto-remplissage : groupes de modules ──
+const AF_SOL = [['carrelage','Carrelage sol'],['chape','Chape'],['dalle-beton','Dalle béton'],['plafond','Plafond']];
+const AF_MUR = [['doublage','Doublage'],['peinture','Peinture'],['cloison','Cloison'],['enduit','Enduit']];
+const AF_AUTRE = [['chauffage','Chauffage'],['electricite','Électricité']];
+
+function renderRooms(){
+  const p = currentProject();
+  const list = document.getElementById('rooms-list');
+  const sumS = (p.rooms.reduce((a,r)=>a+roomSurface(r),0)).toFixed(2);
+  document.getElementById('plan-project-name').textContent = p.nom;
+  document.getElementById('plan-total').textContent = p.rooms.length + ' pièce(s) · ' + sumS + ' m² au sol';
+  if(!p.rooms.length){
+    list.innerHTML = '<div class="plan-empty">Aucune pièce. Ajoute ta première pièce ci-dessus.</div>';
+  } else {
+    const opt = (arr)=>arr.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
+    list.innerHTML = p.rooms.map(r => `
+      <div class="room-card">
+        <div class="room-head">
+          <div class="room-name">${r.nom}</div>
+          <button class="room-del" onclick="deleteRoom('${r.id}')">✕</button>
+        </div>
+        <div class="room-meta">
+          ${r.forme==='L'?'Forme en L':'Rectangle'} ·
+          ${r.L} × ${r.l} m${r.forme==='L'?` (coin ${r.a}×${r.b})`:''} · H ${r.h} m
+        </div>
+        <div class="room-stats">
+          <span><b>${roomSurface(r).toFixed(2)}</b> m² sol</span>
+          <span><b>${roomPerim(r).toFixed(2)}</b> m périm.</span>
+          <span><b>${roomVolume(r).toFixed(1)}</b> m³</span>
+        </div>
+        <div class="room-af">
+          <select id="af-${r.id}">
+            <optgroup label="Sol / plafond">${opt(AF_SOL)}</optgroup>
+            <optgroup label="Murs">${opt(AF_MUR)}</optgroup>
+            <optgroup label="Technique">${opt(AF_AUTRE)}</optgroup>
+          </select>
+          <button class="btn-af" onclick="autofillFromRoom('${r.id}')">Calculer ⟶</button>
+        </div>
+      </div>`).join('');
+  }
+  drawPlan();
+}
+
+function drawPlan(){
+  const cv = document.getElementById('plan-canvas'); if(!cv) return;
+  const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+  const p = currentProject();
+  if(!p.rooms.length){
+    ctx.fillStyle = '#8A929B'; ctx.font = '600 12px Inter'; ctx.textAlign = 'center';
+    ctx.fillText('Le plan apparaîtra ici', W/2, H/2); return;
+  }
+  const maxDim = Math.max(...p.rooms.map(r => Math.max(r.L, r.l)), 1);
+  const pad = 14, cols = Math.min(3, p.rooms.length);
+  const cellW = (W - pad*(cols+1)) / cols;
+  const rowsN = Math.ceil(p.rooms.length / cols);
+  const cellH = Math.min((H - pad*(rowsN+1)) / Math.max(rowsN,1), cellW*0.85);
+  const scale = Math.min(cellW, cellH) * 0.8 / maxDim;
+  p.rooms.forEach((r,i) => {
+    const cx = i % cols, cy = Math.floor(i / cols);
+    const bx = pad + cx*(cellW+pad), by = pad + cy*(cellH+pad);
+    const rw = r.L*scale, rh = r.l*scale;
+    const ox = bx + (cellW-rw)/2, oy = by + (cellH-rh)/2;
+    ctx.fillStyle = 'rgba(232,97,10,0.10)'; ctx.strokeStyle = '#E8610A'; ctx.lineWidth = 1.6;
+    if(r.forme === 'L'){
+      const aw = r.a*scale, bh = r.b*scale;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy); ctx.lineTo(ox+rw, oy); ctx.lineTo(ox+rw, oy+rh-bh);
+      ctx.lineTo(ox+rw-aw, oy+rh-bh); ctx.lineTo(ox+rw-aw, oy+rh); ctx.lineTo(ox, oy+rh);
+      ctx.closePath();
+    } else {
+      ctx.beginPath(); ctx.rect(ox, oy, rw, rh);
+    }
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#1C2B3A'; ctx.font = '700 10px Inter'; ctx.textAlign = 'center';
+    ctx.fillText(r.nom, ox+rw/2, oy+rh/2-2);
+    ctx.fillStyle = '#5C6670'; ctx.font = '600 9px Inter';
+    ctx.fillText(roomSurface(r).toFixed(1)+' m²', ox+rw/2, oy+rh/2+11);
+  });
+}
+
+function autofillFromRoom(roomId){
+  const r = currentProject().rooms.find(x => x.id === roomId); if(!r) return;
+  const target = document.getElementById('af-' + roomId).value;
+  const SOL = ['carrelage','chape','dalle-beton','plafond'];
+  const MUR = ['doublage','cloison','peinture','enduit'];
+  const perim = roomPerim(r), h = r.h || 2.5;
+  closePlan();
+  selectOuvrage(target);
+  if(target === 'electricite') selectSysteme('piece-seche');
+  else if(target === 'carrelage') selectSysteme('sol');
+  const setDim = (id,v) => { const e = document.getElementById('dim-' + id); if(e) e.value = Math.round(v*100)/100; };
+  deductions = [];
+  if(SOL.includes(target)){
+    setDim('longueur', r.L); setDim('largeur', r.l);
+    if(r.forme === 'L'){ deductId++; deductions = [{ id: deductId, larg: r.a, haut: r.b }]; }
+  } else if(MUR.includes(target)){
+    setDim('longueur', perim); setDim('hauteur', h);
+  } else if(target === 'chauffage'){
+    setDim('longueur', r.L); setDim('largeur', r.l); setDim('hauteur', h);
+  } else if(target === 'electricite'){
+    setDim('longueur', r.L); setDim('largeur', r.l);
+  }
+  renderDeductions();
+  calculer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openPlan(){ renderRooms(); document.getElementById('plan-modal').style.display = 'flex'; }
+function closePlan(){ const m = document.getElementById('plan-modal'); if(m) m.style.display = 'none'; }
+
+function renderProjectBar(){
+  const sel = document.getElementById('project-select');
+  if(!sel) return;
+  sel.innerHTML = projects.map(p => `<option value="${p.id}" ${p.id===currentProjectId?'selected':''}>${p.nom}</option>`).join('');
 }
 
 // ════════════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════════════
+loadProjects();
+renderProjectBar();
 renderOuvrages();
 renderSystemes();
 renderDims();
