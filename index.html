@@ -609,9 +609,80 @@
 .btn-af:hover { background: #cf5408; }
 .plan-empty { text-align: center; color: #8A929B; font: 500 13px Inter, sans-serif; padding: 30px 10px; }
 @media (max-width: 720px){ .plan-content { flex-direction: column; } .plan-left { flex: none; } }
+.room-ic { background: none; border: 1px solid #D6CFC2; border-radius: 6px; color: #5C6670; cursor: pointer; font-size: 12px; padding: 3px 7px; margin-left: 4px; }
+.room-ic:hover { background: #F0EBE0; }
+.room-ic.del { color: #B04A3A; border-color: #E3C4BC; }
+.room-card.sel, .wall-card.sel { border-color: #E8610A; box-shadow: 0 0 0 2px rgba(232,97,10,0.18); }
+.btn-cancel-edit { width: 100%; background: none; color: #8A929B; border: 1px solid #D6CFC2; border-radius: 8px; padding: 8px; font: 600 12px Inter, sans-serif; cursor: pointer; margin-top: 6px; }
+.btn-cancel-edit:hover { background: #F0EBE0; }
+.wall-form { margin-top: 14px; }
+.walls-title { font: 700 12px Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #5C6670; margin: 14px 0 8px; }
+.wall-card { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #E0DACE; border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; font: 500 12px Inter, sans-serif; color: #5C6670; }
+.plan-hint { font: 500 11px Inter, sans-serif; color: #8A929B; margin-top: 8px; text-align: center; }
+.btn-shape { background: #fff; border: 1.5px solid #E8610A; color: #cf5408; border-radius: 8px; padding: 12px 8px; font: 700 13px Inter, sans-serif; cursor: pointer; }
+.btn-shape:hover { background: #FCEEE3; }
+.room-name .ed, .ed-h .ed { font-size: 11px; opacity: .5; }
+.room-name { cursor: pointer; }
+.ed-h { cursor: pointer; border-bottom: 1px dotted #B9B3A8; }
+.ed-h:hover { color: #E8610A; }
+/* ── Plan plein écran (override) ── */
+.plan-modal { padding: 0; align-items: stretch; justify-content: stretch; }
+.plan-box { max-width: none; width: 100%; height: 100%; max-height: 100%; border-radius: 0; }
+.plan-tools { display: flex; gap: 6px; align-items: center; padding: 8px 12px; background: #EFEAE0; border-bottom: 1px solid #E0DACE; flex-wrap: wrap; }
+.tool-sep { width: 1px; height: 22px; background: #D6CFC2; margin: 0 2px; }
+.tool-sel, .tool-len { padding: 7px 8px; border: 1px solid #D6CFC2; border-radius: 7px; font: 600 12px Inter, sans-serif; background: #fff; }
+.tool-len { width: 54px; }
+.plan-tools .btn-shape { padding: 8px 10px; font-size: 12px; }
+.btn-shape.alt { border-color: #5C6670; color: #1C2B3A; }
+.plan-canvas-wrap { position: relative; flex: 1; min-height: 0; background: #FBFAF7; }
+#plan-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.cote-input { position: absolute; display: none; width: 64px; padding: 4px 0; border: 2px solid #E8610A; border-radius: 6px; font: 700 13px Inter, sans-serif; text-align: center; z-index: 5; background: #fff; color: #1C2B3A; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.plan-rooms { max-height: 34vh; overflow: auto; padding: 10px 14px; background: #F4F1EB; border-top: 1px solid #E0DACE; }
+.card-name { font: 700 14px Rajdhani, sans-serif; letter-spacing: .02em; color: #1C2B3A; border: none; border-bottom: 1px dashed #CFC8BB; background: transparent; padding: 2px 0; width: 65%; }
+.card-name:focus { outline: none; border-bottom-color: #E8610A; }
+.card-h { width: 50px; border: 1px solid #E0DACE; border-radius: 5px; padding: 2px 5px; font: 600 12px Inter, sans-serif; background: #FBFAF7; }
+/* ── Synthèse en volet escamotable ── */
+.plan-box { position: relative; }
+.plan-rooms { position: absolute; left: 0; right: 0; bottom: 0; max-height: 64vh; overflow: auto; display: none; z-index: 6; background: #F4F1EB; border-top: 2px solid #E8610A; box-shadow: 0 -8px 28px rgba(0,0,0,0.22); }
+.synth-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px 6px; font: 700 13px Rajdhani, sans-serif; letter-spacing: .05em; text-transform: uppercase; color: #5C6670; position: sticky; top: 0; background: #F4F1EB; }
+.synth-head .room-ic { font-size: 12px; }
+.plan-actions { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: none; align-items: center; gap: 10px; background: rgba(28,43,58,0.96); color: #fff; padding: 6px 10px; border-radius: 10px; z-index: 7; font: 600 12px Inter, sans-serif; box-shadow: 0 4px 14px rgba(0,0,0,0.28); white-space: nowrap; }
+.pa-lbl { font-weight: 700; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+.pa-ep { display: flex; align-items: center; gap: 4px; }
+.pa-ep input { width: 46px; padding: 3px 4px; border: none; border-radius: 5px; font: 600 12px Inter, sans-serif; text-align: center; }
+.pa-del { background: #B04A3A; color: #fff; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font: 600 12px Inter, sans-serif; }
+.pa-del:hover { background: #933a2c; }
+.pa-sel { padding: 4px 6px; border: none; border-radius: 5px; font: 600 12px Inter, sans-serif; background: #fff; color: #1C2B3A; max-width: 160px; }
+.share-btn.primary { background: #E8610A; color: #fff; }
+.courses-body { flex: 1; overflow: auto; padding: 14px 18px; background: #F4F1EB; }
+.cs-sec { font: 700 12px Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #5C6670; margin: 16px 0 8px; }
+.cs-sec:first-child { margin-top: 0; }
+.cs-ouvrage { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #E0DACE; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; }
+.cs-ouv-nom { font: 700 13px Inter, sans-serif; color: #1C2B3A; }
+.cs-ouv-sub { font: 500 11px Inter, sans-serif; color: #8A929B; margin-top: 2px; }
+.cs-line { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid #E7E1D5; font: 500 12px Inter, sans-serif; }
+.cs-nom { color: #1C2B3A; }
+.cs-qte { color: #5C6670; white-space: nowrap; }
+.cs-cout { color: #E8610A; font-weight: 700; white-space: nowrap; min-width: 64px; text-align: right; }
+.courses-foot { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #1C2B3A; color: #fff; font: 600 14px Inter, sans-serif; }
+.courses-foot strong { font: 800 20px Rajdhani, sans-serif; color: #FF7A1A; }
 </style>
 </head>
 <body>
+
+<div id="courses-modal" class="plan-modal">
+  <div class="plan-box">
+    <div class="plan-topbar">
+      <div>
+        <div class="plan-title">🛒 Liste de courses — <span id="courses-project"></span></div>
+        <div class="plan-sub">Tous les ouvrages ajoutés au projet</div>
+      </div>
+      <button class="plan-close" onclick="closeCourses()">✕</button>
+    </div>
+    <div class="courses-body" id="courses-list"></div>
+    <div class="courses-foot"><span>Total estimé matériaux</span><strong id="courses-total">—</strong></div>
+  </div>
+</div>
 
 <div id="plan-modal" class="plan-modal">
   <div class="plan-box">
@@ -623,41 +694,41 @@
       <button class="plan-close" onclick="closePlan()">✕</button>
     </div>
 
-    <div class="plan-content">
-      <div class="plan-left">
-        <div class="room-form" id="room-form">
-          <div class="rf-title">Ajouter une pièce</div>
-          <input id="room-nom" type="text" placeholder="Nom (ex. Salon)">
-          <div class="rf-grid">
-            <select id="room-forme" onchange="toggleRoomForm()">
-              <option value="rect">Rectangle</option>
-              <option value="L">Forme en L</option>
-            </select>
-            <input id="room-h" type="number" step="0.01" placeholder="Hauteur 2.50">
-          </div>
-          <div class="rf-grid">
-            <input id="room-L" type="number" step="0.01" placeholder="Longueur (m)">
-            <input id="room-l" type="number" step="0.01" placeholder="Largeur (m)">
-          </div>
-          <div class="rf-grid" id="room-L-coin" style="display:none">
-            <input id="room-a" type="number" step="0.01" placeholder="Coin retiré a (m)">
-            <input id="room-b" type="number" step="0.01" placeholder="Coin retiré b (m)">
-          </div>
-          <button class="btn-add-room" onclick="addRoom()">+ Ajouter la pièce</button>
-        </div>
-        <canvas id="plan-canvas" width="360" height="240"></canvas>
-      </div>
-      <div class="plan-right">
-        <div id="rooms-list"></div>
-      </div>
+    <div class="plan-tools">
+      <button class="btn-shape" onclick="dropRoom('rect')">▭ Rectangle</button>
+      <button class="btn-shape" onclick="dropRoom('L')">⌐ Forme en L</button>
+      <span class="tool-sep"></span>
+      <select id="wall-dir" class="tool-sel">
+        <option value="h">Cloison horiz.</option>
+        <option value="v">Cloison vert.</option>
+      </select>
+      <input id="wall-len" class="tool-len" type="number" step="0.1" value="2">
+      <button class="btn-shape alt" onclick="addWall()">+ Cloison</button>
+      <span class="tool-sep"></span>
+      <button class="btn-shape" onclick="zoomPlan(1.25)" title="Zoom avant">＋</button>
+      <button class="btn-shape" onclick="zoomPlan(0.8)" title="Zoom arrière">－</button>
+      <button class="btn-shape" onclick="resetView()" title="Recentrer">⟳</button>
+      <button class="btn-shape alt" onclick="toggleSynthese()">📋 Synthèse</button>
+    </div>
+
+    <div class="plan-canvas-wrap" id="plan-canvas-wrap">
+      <div id="plan-actions" class="plan-actions"></div>
+      <canvas id="plan-canvas" width="360" height="320"></canvas>
+      <input id="cote-input" class="cote-input" type="number" step="0.05" inputmode="decimal">
+    </div>
+
+    <div class="plan-rooms" id="plan-rooms">
+      <div class="synth-head"><span>📋 Synthèse des pièces</span><button class="room-ic" onclick="toggleSynthese()">✕ Fermer</button></div>
+      <div id="rooms-list"></div>
     </div>
   </div>
 </div>
 
+
 <header>
   <div class="logo-icon"></div>
   <div class="header-title">
-    <h1>Calepin de Chantier <span class="vtag">métrés & conseils</span></h1>
+    <h1>Calepin de Chantier</h1>
   </div>
   <div class="project-bar">
     <span class="project-lbl">Projet</span>
@@ -666,6 +737,7 @@
     <button class="pj-btn" title="Renommer" onclick="renameProject()">✎</button>
     <button class="pj-btn" title="Supprimer" onclick="deleteProject()">🗑</button>
     <button class="pj-btn plan-open" onclick="openPlan()">📐 Plan</button>
+    <button class="pj-btn plan-open" onclick="openCourses()">🛒 Liste</button>
   </div>
 </header>
 
@@ -774,6 +846,42 @@ const ISOLANTS = [
 function getIsolant(val) { return ISOLANTS.find(i => i.val === val) || ISOLANTS[ISOLANTS.length-1]; }
 function fmtPlaque(typeVal) { return TYPES_PLAQUE.find(t=>t.val===typeVal)?.label || 'BA13'; }
 
+const ISOLANT_MAT = [
+  {val:'lv', nom:'Laine de verre', lambda:0.032},
+  {val:'lr', nom:'Laine de roche', lambda:0.035},
+  {val:'lb', nom:'Laine de bois', lambda:0.038},
+  {val:'ouate', nom:'Ouate de cellulose', lambda:0.039},
+];
+function isoMat(v){ return ISOLANT_MAT.find(m=>m.val===v) || ISOLANT_MAT[0]; }
+const MONTANTS = [
+  {val:'48', label:'M48 (cloison ~72 mm)'},
+  {val:'70', label:'M70 (cloison ~98 mm)'},
+  {val:'90', label:'M90 (cloison ~120 mm)'},
+];
+const ISOLANT_EP = [
+  {val:'45', label:'45 mm'}, {val:'60', label:'60 mm'}, {val:'75', label:'75 mm'},
+  {val:'85', label:'85 mm'}, {val:'100', label:'100 mm'}, {val:'120', label:'120 mm'},
+  {val:'140', label:'140 mm'}, {val:'160', label:'160 mm'}, {val:'200', label:'200 mm'},
+  {val:'250', label:'250 mm'}, {val:'300', label:'300 mm'},
+  {val:'aucun', label:'Sans isolant'},
+];
+function epOptions(matVal){
+  const m = isoMat(matVal);
+  return ISOLANT_EP.map(o => {
+    if(o.val==='aucun') return o;
+    const ep = parseFloat(o.val);
+    const r = (ep/1000/m.lambda).toFixed(2).replace('.',',');
+    return { val:o.val, label:`${ep} mm (R ${r})` };
+  });
+}
+function refreshIsoEp(){
+  const sel = document.getElementById('dim-isolant'); if(!sel) return;
+  const cur = sel.value;
+  const mat = (document.getElementById('dim-isomat')||{}).value || ISOLANT_MAT[0].val;
+  sel.innerHTML = epOptions(mat).map(o=>`<option value="${o.val}">${o.label}</option>`).join('');
+  sel.value = cur;
+}
+
 const OUVRAGES = {
 
   // ═══════════════ DOUBLAGE ═══════════════
@@ -796,7 +904,11 @@ const OUVRAGES = {
       if (sys === 'colle') {
         base.push({ type:'select', id:'isolant', label:'Complexe isolant', options: ISOLANTS.filter(i=>i.val.startsWith('pse')) });
       } else {
-        base.push({ type:'select', id:'isolant', label:'Isolant', options: ISOLANTS.filter(i=>i.val.startsWith('gr32')||i.val==='aucun') });
+        base.push({ type:'select', id:'isomat', label:'Nature de l\'isolant', options: ISOLANT_MAT.map(m=>({val:m.val,label:m.nom})), onchange:'refreshIsoEp()' });
+        base.push({ type:'select', id:'isolant', label:'Épaisseur d\'isolant', options: epOptions(ISOLANT_MAT[0].val) });
+      }
+      if (sys === 'ossature') {
+        base.push({ type:'select', id:'montant', label:'Ossature (montant)', options: MONTANTS });
       }
       return base;
     },
@@ -816,6 +928,10 @@ const OUVRAGES = {
       const fmt = parseFloat(D.format);
       const surfPlaque = 1.2 * fmt;
       const iso = getIsolant(D.isolant);
+      const im = isoMat(D.isomat);
+      const epLaine = (!D.isolant || D.isolant==='aucun' || (''+D.isolant).startsWith('pse')) ? 0 : (parseFloat(D.isolant)||0);
+      const isoNom = epLaine>0 ? `${im.nom} ${epLaine}mm` : '';
+      const isoR = epLaine>0 ? (epLaine/1000/im.lambda).toFixed(2).replace('.',',') : '0';
       const peaux = opts['double-peau'] ? 2 : 1;
       const mats = [];
 
@@ -842,21 +958,21 @@ const OUVRAGES = {
         mats.push({ nom: 'Rails R1 (lisses Clip\'Optima)', qte: railsR1, unite: 'barres 3m',
           detail: `Lisse haute + basse`, coeff: '/', dtu: '/' });
 
-        if (iso.ep > 0) {
-          mats.push({ nom: `Laine GR32 ${iso.ep}mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
-            detail: `R = ${iso.r} m².K/W — embrochée sur appuis — +5%`, coeff: '×1,05', dtu: '/' });
+        if (epLaine > 0) {
+          mats.push({ nom: isoNom, qte: Math.ceil(S * 1.05), unite: 'm²',
+            detail: `R = ${isoR} m².K/W — embrochée sur appuis — +5%`, coeff: '×1,05', dtu: '/' });
         }
       }
 
       if (sys === 'ossature') {
         const nbMontants = Math.ceil(L / 0.6) + 1;
-        mats.push({ nom: 'Montants M48 (ou M70)', qte: nbMontants, unite: 'montants',
+        mats.push({ nom: `Montants M${D.montant||'48'}`, qte: nbMontants, unite: 'montants',
           detail: `Entraxe 60 cm — longueur ${H} m (couper rails 3m ou 4m)`, coeff: '/', dtu: '/' });
-        mats.push({ nom: 'Rails R48 sol + plafond', qte: Math.ceil(L / 3) * 2, unite: 'barres 3m',
+        mats.push({ nom: `Rails R${D.montant||'48'} sol + plafond`, qte: Math.ceil(L / 3) * 2, unite: 'barres 3m',
           detail: `Fixation tous les 60 cm max`, coeff: '/', dtu: '/' });
-        if (iso.ep > 0) {
-          mats.push({ nom: `Laine GR32 ${iso.ep}mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
-            detail: `R = ${iso.r} m².K/W — +5% découpes`, coeff: '×1,05', dtu: '/' });
+        if (epLaine > 0) {
+          mats.push({ nom: isoNom, qte: Math.ceil(S * 1.05), unite: 'm²',
+            detail: `R = ${isoR} m².K/W — +5% découpes`, coeff: '×1,05', dtu: '/' });
         }
       }
 
@@ -923,12 +1039,8 @@ const OUVRAGES = {
       { type:'num', id:'hauteur', label:'Hauteur sous plafond', unit:'M' },
       { type:'select', id:'plaque', label:'Type de plaque', options: TYPES_PLAQUE },
       { type:'select', id:'format', label:'Format de plaque', options: PLAQUE_FORMATS },
-      { type:'select', id:'isolant', label:'Isolant en âme', options: [
-        {val:'gr32-45', label:'Laine 45 mm (standard phonique)'},
-        {val:'gr32-60', label:'Laine 60 mm'},
-        {val:'gr32-70', label:'Laine 70 mm (pour M70)'},
-        {val:'aucun', label:'Sans isolant (déconseillé)'},
-      ]},
+      { type:'select', id:'isomat', label:'Nature de l\'isolant', options: ISOLANT_MAT.map(m=>({val:m.val,label:m.nom})), onchange:'refreshIsoEp()' },
+      { type:'select', id:'isolant', label:'Isolant en âme', options: epOptions(ISOLANT_MAT[0].val) },
     ],
     options: () => [
       { id:'montants-doubles', label:'Montants doublés (dos à dos)', sub:'Augmente la hauteur admissible et la rigidité', def:false },
@@ -964,9 +1076,8 @@ const OUVRAGES = {
       mats.push({ nom: `Rails ${railType} sol + plafond`, qte: nbRails, unite: 'barres 3m',
         detail: `Fixation au support tous les 60 cm max`, coeff: '/', dtu: '/' });
 
-      const iso = getIsolant(D.isolant === 'gr32-70' ? 'gr32-75' : D.isolant);
-      if (D.isolant !== 'aucun') {
-        mats.push({ nom: `Laine en âme ${D.isolant.split('-')[1]}mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
+      if (D.isolant && D.isolant !== 'aucun') {
+        mats.push({ nom: `${isoMat(D.isomat).nom} en âme ${parseFloat(D.isolant)||0}mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
           detail: `Isolation phonique — +5% découpes`, coeff: '×1,05', dtu: '/' });
       }
 
@@ -1018,14 +1129,8 @@ const OUVRAGES = {
       { type:'num', id:'longueur', label:'Longueur de pièce', unit:'M' },
       { type:'num', id:'largeur', label:'Largeur de pièce', unit:'M' },
       { type:'select', id:'plaque', label:'Type de plaque', options: TYPES_PLAQUE },
-      { type:'select', id:'isolant', label:'Isolant au-dessus', options: [
-        {val:'aucun', label:'Sans isolant'},
-        {val:'gr32-100', label:'Laine 100 mm (R=2,50)'},
-        {val:'gr32-120', label:'Laine 120 mm (R=3,00)'},
-        {val:'gr32-160', label:'Laine 160 mm (R=4,00)'},
-        {val:'gr32-200', label:'Laine 200 mm (R=5,00)'},
-        {val:'gr32-300', label:'Laine 300 mm (R=7,50 — combles RE2020)'},
-      ]},
+      { type:'select', id:'isomat', label:'Nature de l\'isolant', options: ISOLANT_MAT.map(m=>({val:m.val,label:m.nom})), onchange:'refreshIsoEp()' },
+      { type:'select', id:'isolant', label:'Isolant au-dessus', options: epOptions(ISOLANT_MAT[0].val) },
     ],
     options: () => [
       { id:'membrane', label:'Membrane pare-vapeur', sub:'Obligatoire sous combles —', def:true },
@@ -1062,10 +1167,9 @@ const OUVRAGES = {
           detail: `Appui périphérique des montants`, coeff: '/', dtu: '/' });
       }
 
-      const iso = D.isolant;
-      if (iso !== 'aucun') {
-        const ep = iso.split('-')[1];
-        mats.push({ nom: `Laine de verre ${ep} mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
+      if (D.isolant && D.isolant !== 'aucun') {
+        const ep = parseFloat(D.isolant);
+        mats.push({ nom: `${isoMat(D.isomat).nom} ${ep} mm`, qte: Math.ceil(S * 1.05), unite: 'm²',
           detail: `Déroulée au-dessus de l\'ossature — +5%`, coeff: '×1,05', dtu: '/' });
       }
 
@@ -2401,7 +2505,7 @@ function renderDims() {
       return `
         <div class="dim-row">
           <div class="dim-label">${d.label}</div>
-          <select id="dim-${d.id}">${d.options.map(o=>`<option value="${o.val}">${o.label}</option>`).join('')}</select>
+          <select id="dim-${d.id}"${d.onchange?` onchange="${d.onchange}"`:''}>${d.options.map(o=>`<option value="${o.val}">${o.label}</option>`).join('')}</select>
         </div>`;
     }
     return `
@@ -2562,6 +2666,7 @@ function calculer() {
       <div class="total-amount" id="grand-total">—</div>
       <div class="total-sub" id="total-ttc"></div>
     </div>
+    <div class="share-row"><button class="share-btn primary" id="add-proj-btn" onclick="addCurrentToProject()">➕ Ajouter au projet</button><button class="share-btn" onclick="partagerMetre()">⤴ Partager</button></div>
     ${notesHtml}
   `;
 
@@ -2582,6 +2687,31 @@ function clearResults() {
   document.getElementById('surface-nette-header').textContent = '—';
   document.getElementById('dtu-banner-zone').innerHTML = '';
   document.getElementById('results-title').textContent = 'Matériaux nécessaires';
+}
+
+function toast(msg) {
+  let el = document.getElementById('toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; document.body.appendChild(el); }
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function partagerMetre() {
+  if (!lastMats || !lastMats.length) { toast('Lance d\'abord un calcul'); return; }
+  const titre = document.getElementById('results-title').textContent;
+  const surf = (document.getElementById('surface-nette-header').innerText || '').replace(/\s+/g, ' ').trim();
+  let txt = `CALEPIN DE CHANTIER\n${titre}\nSurface : ${surf}\n\nMATÉRIAUX :\n`;
+  lastMats.forEach(m => { txt += `• ${m.qte} ${m.unite} — ${m.nom}\n`; });
+  const tot = document.getElementById('grand-total').textContent;
+  if (tot && tot !== '—') txt += `\nEstimation matériaux : ${tot}`;
+  txt += '\n\n(établi avec Calepin de Chantier)';
+  if (navigator.share) {
+    navigator.share({ title: 'Métré — ' + titre, text: txt }).catch(() => {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(() => toast('Métré copié ✓')).catch(() => toast('Copie impossible'));
+  } else {
+    toast('Partage non disponible sur cet appareil');
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3066,7 +3196,8 @@ let projects = [];
 let currentProjectId = null;
 const LS_KEY = 'calepin_projects_v1';
 
-function newProjectObj(nom){ return { id:'p'+Date.now()+Math.floor(Math.random()*1000), nom, rooms:[], createdAt:Date.now() }; }
+function newProjectObj(nom){ return { id:'p'+Date.now()+Math.floor(Math.random()*1000), nom, rooms:[], walls:[], items:[], createdAt:Date.now() }; }
+function esc(s){ return (''+(s==null?'':s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function currentProject(){ return projects.find(p => p.id === currentProjectId); }
 
 function loadProjects(){
@@ -3076,6 +3207,16 @@ function loadProjects(){
   }catch(e){ projects = []; }
   if(!projects.length){ const p = newProjectObj('Mon projet'); projects.push(p); currentProjectId = p.id; saveProjects(); }
   if(!projects.find(p => p.id === currentProjectId)) currentProjectId = projects[0].id;
+  // migration : positions de pièces + cloisons
+  let mx = 0.25;
+  projects.forEach(p => {
+    if(!p.walls) p.walls = [];
+    if(!p.items) p.items = [];
+    p.walls.forEach(w=>{ if(w.ep===undefined) w.ep=0.072; });
+    (p.rooms || []).forEach(r => {
+      if(r.x === undefined || r.y === undefined){ r.x = mx; r.y = 0.25; mx += (r.L || 3) + 0.5; }
+    });
+  });
 }
 function saveProjects(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify({ projects, current: currentProjectId })); }catch(e){}
@@ -3107,30 +3248,143 @@ function roomSurface(r){ return r.forme === 'L' ? Math.max(0, r.L*r.l - r.a*r.b)
 function roomPerim(r){ return 2*(r.L + r.l); }
 function roomVolume(r){ return roomSurface(r) * (r.h || 2.5); }
 
-function _v(id){ const e = document.getElementById(id); return e ? e.value : ''; }
-function toggleRoomForm(){
-  const isL = document.getElementById('room-forme').value === 'L';
-  document.getElementById('room-L-coin').style.display = isL ? 'grid' : 'none';
+const PLAN_SCALE = 28, PLAN_MARGIN = 26, PLAN_SNAP = 0.25, PLAN_MAG = 0.35;
+let planSel = null, planDrag = null, coteHotspots = [], resizeHandles = [], coteEdit = null;
+let planZoom = 1, planOffX = 0, planOffY = 0;
+function planSc(){ return PLAN_SCALE * planZoom; }
+function m2px(v){ return PLAN_MARGIN + planOffX + v * planSc(); }
+function px2m(px){ return (px - PLAN_MARGIN - planOffX) / planSc(); }
+function zoomPlan(f){
+  const cv = document.getElementById('plan-canvas'); if(!cv) return;
+  const cxm = px2m(cv.width/2), cym = px2m(cv.height/2);
+  planZoom = Math.max(0.4, Math.min(3, planZoom * f));
+  planOffX = cv.width/2 - PLAN_MARGIN - cxm*planSc();
+  planOffY = cv.height/2 - PLAN_MARGIN - cym*planSc();
+  drawPlan();
 }
-function addRoom(){
+function resetView(){ planZoom = 1; planOffX = 0; planOffY = 0; drawPlan(); }
+function toggleSynthese(){ const el = document.getElementById('plan-rooms'); if(el) el.style.display = (el.style.display==='block')?'none':'block'; }
+
+function _v(id){ const e = document.getElementById(id); return e ? e.value : ''; }
+
+function placeNewRoom(p, room){
+  if(!p.rooms.length){ room.x = 0.5; room.y = 0.5; return; }
+  let maxR = 0, maxB = 0;
+  p.rooms.forEach(r => { maxR = Math.max(maxR, r.x + r.L); maxB = Math.max(maxB, r.y + r.l); });
+  const worldW = (360 - 2*PLAN_MARGIN) / PLAN_SCALE;
+  if(maxR + 0.5 + room.L <= worldW){ room.x = maxR + 0.5; room.y = 0.5; }
+  else { room.x = 0.5; room.y = maxB + 0.5; }
+}
+function dropRoom(forme){
   const p = currentProject(); if(!p) return;
-  const forme = document.getElementById('room-forme').value;
-  const nom = (_v('room-nom') || '').trim() || 'Pièce ' + (p.rooms.length + 1);
-  const L = parseFloat(_v('room-L')) || 0, l = parseFloat(_v('room-l')) || 0, h = parseFloat(_v('room-h')) || 2.5;
-  const a = parseFloat(_v('room-a')) || 0, b = parseFloat(_v('room-b')) || 0;
-  if(L <= 0 || l <= 0){ alert('Renseigne au moins la longueur et la largeur.'); return; }
-  if(forme === 'L' && (a <= 0 || b <= 0)){ alert('Pour une forme en L, renseigne le coin retiré (a et b).'); return; }
-  p.rooms.push({ id:'r'+Date.now()+Math.floor(Math.random()*1000), nom, forme, L, l, a, b, h });
-  saveProjects();
-  ['room-nom','room-L','room-l','room-a','room-b'].forEach(id => { const e = document.getElementById(id); if(e) e.value = ''; });
+  const base = forme === 'L'
+    ? { forme:'L', L:5, l:4, a:2, b:1.5, h:2.5 }
+    : { forme:'rect', L:4, l:3, a:0, b:0, h:2.5 };
+  const room = Object.assign({ id:'r'+Date.now()+Math.floor(Math.random()*1000), nom:'Pièce '+(p.rooms.length+1) }, base);
+  placeNewRoom(p, room); p.rooms.push(room);
+  planSel = { type:'room', id:room.id };
+  saveProjects(); renderRooms();
+}
+function renameRoom(id){
+  const r = currentProject().rooms.find(x=>x.id===id); if(!r) return;
+  const v = prompt('Nom de la pièce :', r.nom); if(v && v.trim()){ r.nom = v.trim(); saveProjects(); renderRooms(); }
+}
+function editHeight(id){
+  const r = currentProject().rooms.find(x=>x.id===id); if(!r) return;
+  const v = parseFloat((prompt('Hauteur sous plafond (m) :', r.h)||'').replace(',','.'));
+  if(v && v>0){ r.h = v; saveProjects(); renderRooms(); }
+}
+function openCoteInput(hs){
+  const cv = document.getElementById('plan-canvas');
+  const r = currentProject().rooms.find(x=>x.id===hs.roomId); if(!r) return;
+  coteEdit = { roomId:hs.roomId, param:hs.param };
+  const inp = document.getElementById('cote-input');
+  inp.value = r[hs.param];
+  inp.style.left = Math.max(2, Math.min(hs.x + hs.w/2 - 32, cv.width - 66)) + 'px';
+  inp.style.top  = Math.max(2, hs.y - 6) + 'px';
+  inp.style.display = 'block';
+  setTimeout(()=>{ inp.focus(); inp.select(); }, 0);
+}
+function commitCote(){
+  if(!coteEdit) return;
+  const inp = document.getElementById('cote-input');
+  const v = parseFloat((inp.value||'').replace(',','.'));
+  const r = currentProject().rooms.find(x=>x.id===coteEdit.roomId);
+  const pm = coteEdit.param; coteEdit = null; inp.style.display = 'none';
+  if(r && v>0){
+    if(pm==='a' && v>=r.L){} else if(pm==='b' && v>=r.l){} else { r[pm]=v; saveProjects(); }
+  }
   renderRooms();
 }
 function deleteRoom(id){
   const p = currentProject(); p.rooms = p.rooms.filter(r => r.id !== id);
+  if(planSel && planSel.type==='room' && planSel.id===id) planSel = null;
   saveProjects(); renderRooms();
 }
 
-// ── Auto-remplissage : groupes de modules ──
+// ── Cloisons ──
+function addWall(){
+  const p = currentProject(); if(!p) return;
+  const dir = document.getElementById('wall-dir').value;
+  const len = parseFloat((_v('wall-len')||'').replace(',','.')) || 2;
+  const worldW = (360 - 2*PLAN_MARGIN)/PLAN_SCALE, worldH = (290 - 2*PLAN_MARGIN)/PLAN_SCALE;
+  const w = { id:'w'+Date.now()+Math.floor(Math.random()*1000), dir, len, ep:0.072,
+    x: Math.max(0.5, worldW/2 - (dir==='h'?len/2:0)), y: Math.max(0.5, worldH/2 - (dir==='v'?len/2:0)) };
+  p.walls.push(w); planSel = { type:'wall', id:w.id }; saveProjects(); renderRooms();
+}
+function editWallLen(id){
+  const w = currentProject().walls.find(x=>x.id===id); if(!w) return;
+  const v = parseFloat((prompt('Longueur de la cloison (m) :', w.len)||'').replace(',','.'));
+  if(v && v>0){ w.len = v; saveProjects(); renderRooms(); }
+}
+function deleteWall(id){
+  const p = currentProject(); p.walls = p.walls.filter(w => w.id !== id);
+  if(planSel && planSel.type==='wall' && planSel.id===id) planSel = null;
+  saveProjects(); renderRooms();
+}
+function setWallThickness(id, cm){
+  const w = currentProject().walls.find(x=>x.id===id);
+  const n = parseFloat((''+cm).replace(',','.'));
+  if(w && n>0){ w.ep = Math.max(0.01, n/100); saveProjects(); drawPlan(); }
+}
+const WALL_TYPES = [
+  [0.05,  'Carreau de plâtre 50 mm'],
+  [0.072, 'Cloison placo 72/48'],
+  [0.098, 'Cloison placo 98/48'],
+  [0.10,  'Carreau de plâtre 100 mm'],
+  [0.12,  'Cloison placo 120'],
+  [0.15,  'Mur / refend 150 mm'],
+  [0.20,  'Mur porteur 200 mm']
+];
+function wallOptions(ep){
+  let best = WALL_TYPES[0][0], bd = 1e9;
+  WALL_TYPES.forEach(([v]) => { const d = Math.abs(v - ep); if(d < bd){ bd = d; best = v; } });
+  return WALL_TYPES.map(([v,n]) => `<option value="${v}" ${v===best?'selected':''}>${n}</option>`).join('');
+}
+function setWallEp(id, m){
+  const w = currentProject().walls.find(x=>x.id===id);
+  const n = parseFloat(m);
+  if(w && n>0){ w.ep = n; saveProjects(); drawPlan(); }
+}
+function deleteSelection(){
+  if(!planSel) return;
+  if(planSel.type==='room') deleteRoom(planSel.id); else deleteWall(planSel.id);
+}
+function updateActions(){
+  const el = document.getElementById('plan-actions'); if(!el) return;
+  const p = currentProject();
+  if(!planSel){ el.style.display='none'; el.innerHTML=''; return; }
+  if(planSel.type==='room'){
+    const r = p.rooms.find(x=>x.id===planSel.id); if(!r){ el.style.display='none'; return; }
+    el.innerHTML = '<span class="pa-lbl">'+(r.nom||'Pièce')+'</span><button class="pa-del" onclick="deleteSelection()">🗑 Supprimer</button>';
+  } else {
+    const w = p.walls.find(x=>x.id===planSel.id); if(!w){ el.style.display='none'; return; }
+    el.innerHTML = '<span class="pa-lbl">Cloison</span><select class="pa-sel" onchange="setWallEp(\''+w.id+'\',this.value)">'+wallOptions(w.ep||0.072)+'</select><button class="pa-del" onclick="deleteSelection()">🗑</button>';
+  }
+  el.style.display='flex';
+}
+
+// ── Auto-remplissage ──
 const AF_SOL = [['carrelage','Carrelage sol'],['chape','Chape'],['dalle-beton','Dalle béton'],['plafond','Plafond']];
 const AF_MUR = [['doublage','Doublage'],['peinture','Peinture'],['cloison','Cloison'],['enduit','Enduit']];
 const AF_AUTRE = [['chauffage','Chauffage'],['electricite','Électricité']];
@@ -3140,75 +3394,189 @@ function renderRooms(){
   const list = document.getElementById('rooms-list');
   const sumS = (p.rooms.reduce((a,r)=>a+roomSurface(r),0)).toFixed(2);
   document.getElementById('plan-project-name').textContent = p.nom;
-  document.getElementById('plan-total').textContent = p.rooms.length + ' pièce(s) · ' + sumS + ' m² au sol';
-  if(!p.rooms.length){
-    list.innerHTML = '<div class="plan-empty">Aucune pièce. Ajoute ta première pièce ci-dessus.</div>';
-  } else {
-    const opt = (arr)=>arr.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
-    list.innerHTML = p.rooms.map(r => `
-      <div class="room-card">
+  document.getElementById('plan-total').textContent = p.rooms.length + ' pièce(s) · ' + sumS + ' m² · ' + (p.walls?p.walls.length:0) + ' cloison(s)';
+  const opt = (arr)=>arr.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
+  let html = '';
+  if(!p.rooms.length){ html += '<div class="plan-empty">Dépose un rectangle ou un L sur le plan pour commencer.</div>'; }
+  else {
+    html += p.rooms.map(r => `
+      <div class="room-card ${planSel&&planSel.type==='room'&&planSel.id===r.id?'sel':''}">
         <div class="room-head">
-          <div class="room-name">${r.nom}</div>
-          <button class="room-del" onclick="deleteRoom('${r.id}')">✕</button>
+          <input class="card-name" value="${esc(r.nom)}" onchange="setRoomName('${r.id}',this.value)">
+          <button class="room-ic del" onclick="deleteRoom('${r.id}')">✕</button>
         </div>
-        <div class="room-meta">
-          ${r.forme==='L'?'Forme en L':'Rectangle'} ·
-          ${r.L} × ${r.l} m${r.forme==='L'?` (coin ${r.a}×${r.b})`:''} · H ${r.h} m
-        </div>
-        <div class="room-stats">
-          <span><b>${roomSurface(r).toFixed(2)}</b> m² sol</span>
-          <span><b>${roomPerim(r).toFixed(2)}</b> m périm.</span>
-          <span><b>${roomVolume(r).toFixed(1)}</b> m³</span>
-        </div>
+        <div class="room-meta">${r.forme==='L'?'Forme en L':'Rectangle'} · H <input class="card-h" type="number" step="0.05" value="${r.h}" onchange="setRoomHeight('${r.id}',this.value)"> m</div>
+        <div class="room-stats"><span><b>${roomSurface(r).toFixed(2)}</b> m² sol</span><span><b>${roomPerim(r).toFixed(2)}</b> m périm.</span><span><b>${roomVolume(r).toFixed(1)}</b> m³</span></div>
         <div class="room-af">
-          <select id="af-${r.id}">
-            <optgroup label="Sol / plafond">${opt(AF_SOL)}</optgroup>
-            <optgroup label="Murs">${opt(AF_MUR)}</optgroup>
-            <optgroup label="Technique">${opt(AF_AUTRE)}</optgroup>
-          </select>
+          <select id="af-${r.id}"><optgroup label="Sol / plafond">${opt(AF_SOL)}</optgroup><optgroup label="Murs">${opt(AF_MUR)}</optgroup><optgroup label="Technique">${opt(AF_AUTRE)}</optgroup></select>
           <button class="btn-af" onclick="autofillFromRoom('${r.id}')">Calculer ⟶</button>
         </div>
       </div>`).join('');
   }
+  if(p.walls && p.walls.length){
+    html += '<div class="walls-title">Cloisons</div>';
+    html += p.walls.map(w => `
+      <div class="wall-card ${planSel&&planSel.type==='wall'&&planSel.id===w.id?'sel':''}">
+        <span>Cloison ${w.dir==='h'?'horiz.':'vert.'} · <input class="card-h" type="number" step="0.1" value="${w.len}" onchange="setWallLen('${w.id}',this.value)"> m</span>
+        <button class="room-ic del" onclick="deleteWall('${w.id}')">✕</button>
+      </div>`).join('');
+  }
+  list.innerHTML = html;
   drawPlan();
+  updateActions();
 }
+function setRoomName(id,v){ const r=currentProject().rooms.find(x=>x.id===id); if(r){ r.nom=(v||'').trim()||r.nom; saveProjects(); drawPlan(); } }
+function setRoomHeight(id,v){ const r=currentProject().rooms.find(x=>x.id===id); const n=parseFloat((''+v).replace(',','.')); if(r&&n>0){ r.h=n; saveProjects(); renderRooms(); } }
+function setWallLen(id,v){ const w=currentProject().walls.find(x=>x.id===id); const n=parseFloat((''+v).replace(',','.')); if(w&&n>0){ w.len=n; saveProjects(); renderRooms(); } }
 
+// ── Dessin du plan coté ──
+function _cote(ctx, txt, x, y, align, param, roomId){
+  ctx.fillStyle = param ? '#E8610A' : '#9AA0A6';
+  ctx.font = (param?'700':'600') + ' 9px Inter'; ctx.textAlign = align;
+  ctx.fillText(txt, x, y);
+  if(param){
+    const w = ctx.measureText(txt).width;
+    let hx = align==='right' ? x-w : align==='left' ? x : x-w/2;
+    coteHotspots.push({ x:hx-5, y:y-11, w:w+10, h:15, roomId, param });
+  }
+}
 function drawPlan(){
   const cv = document.getElementById('plan-canvas'); if(!cv) return;
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
-  ctx.clearRect(0,0,W,H);
+  coteHotspots = []; resizeHandles = [];
+  ctx.clearRect(0,0,W,H); ctx.fillStyle = '#FBFAF7'; ctx.fillRect(0,0,W,H);
+  const mx = m2px, sc = planSc();
+  ctx.strokeStyle = '#ECE6DA'; ctx.lineWidth = 1;
+  const xMin=Math.floor(px2m(0)), xMax=Math.ceil(px2m(W)), yMin=Math.floor(px2m(0)), yMax=Math.ceil(px2m(H));
+  for(let gx=xMin; gx<=xMax; gx++){ const px=mx(gx); ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,H); ctx.stroke(); }
+  for(let gy=yMin; gy<=yMax; gy++){ const py=mx(gy); ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(W,py); ctx.stroke(); }
   const p = currentProject();
-  if(!p.rooms.length){
-    ctx.fillStyle = '#8A929B'; ctx.font = '600 12px Inter'; ctx.textAlign = 'center';
-    ctx.fillText('Le plan apparaîtra ici', W/2, H/2); return;
+  if(!p.rooms.length && (!p.walls||!p.walls.length)){
+    ctx.fillStyle='#8A929B'; ctx.font='600 12px Inter'; ctx.textAlign='center';
+    ctx.fillText('Dépose une forme, glisse-la, tire ses bords ou tape ses cotes', W/2, H/2); return;
   }
-  const maxDim = Math.max(...p.rooms.map(r => Math.max(r.L, r.l)), 1);
-  const pad = 14, cols = Math.min(3, p.rooms.length);
-  const cellW = (W - pad*(cols+1)) / cols;
-  const rowsN = Math.ceil(p.rooms.length / cols);
-  const cellH = Math.min((H - pad*(rowsN+1)) / Math.max(rowsN,1), cellW*0.85);
-  const scale = Math.min(cellW, cellH) * 0.8 / maxDim;
-  p.rooms.forEach((r,i) => {
-    const cx = i % cols, cy = Math.floor(i / cols);
-    const bx = pad + cx*(cellW+pad), by = pad + cy*(cellH+pad);
-    const rw = r.L*scale, rh = r.l*scale;
-    const ox = bx + (cellW-rw)/2, oy = by + (cellH-rh)/2;
-    ctx.fillStyle = 'rgba(232,97,10,0.10)'; ctx.strokeStyle = '#E8610A'; ctx.lineWidth = 1.6;
-    if(r.forme === 'L'){
-      const aw = r.a*scale, bh = r.b*scale;
-      ctx.beginPath();
-      ctx.moveTo(ox, oy); ctx.lineTo(ox+rw, oy); ctx.lineTo(ox+rw, oy+rh-bh);
-      ctx.lineTo(ox+rw-aw, oy+rh-bh); ctx.lineTo(ox+rw-aw, oy+rh); ctx.lineTo(ox, oy+rh);
-      ctx.closePath();
-    } else {
-      ctx.beginPath(); ctx.rect(ox, oy, rw, rh);
-    }
+  p.rooms.forEach(r => {
+    const sel = planSel && planSel.type==='room' && planSel.id===r.id;
+    const ox=mx(r.x), oy=mx(r.y), rw=r.L*sc, rh=r.l*sc;
+    ctx.fillStyle = sel?'rgba(232,97,10,0.22)':'rgba(232,97,10,0.10)';
+    ctx.strokeStyle='#E8610A'; ctx.lineWidth = sel?2.4:1.6;
+    if(r.forme==='L'){
+      const aw=r.a*sc, bh=r.b*sc;
+      ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(ox+rw,oy); ctx.lineTo(ox+rw,oy+rh-bh);
+      ctx.lineTo(ox+rw-aw,oy+rh-bh); ctx.lineTo(ox+rw-aw,oy+rh); ctx.lineTo(ox,oy+rh); ctx.closePath();
+    } else { ctx.beginPath(); ctx.rect(ox,oy,rw,rh); }
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#1C2B3A'; ctx.font = '700 10px Inter'; ctx.textAlign = 'center';
-    ctx.fillText(r.nom, ox+rw/2, oy+rh/2-2);
-    ctx.fillStyle = '#5C6670'; ctx.font = '600 9px Inter';
-    ctx.fillText(roomSurface(r).toFixed(1)+' m²', ox+rw/2, oy+rh/2+11);
+    ctx.fillStyle='#1C2B3A'; ctx.font='700 11px Inter'; ctx.textAlign='center';
+    ctx.fillText(r.nom, ox+rw/2, oy+rh/2+3);
+    _cote(ctx, r.L.toFixed(2), ox+rw/2, oy-4, 'center', 'L', r.id);
+    _cote(ctx, r.l.toFixed(2), ox-4, oy+rh/2, 'right', 'l', r.id);
+    if(r.forme==='L'){
+      const aw=r.a*sc, bh=r.b*sc;
+      _cote(ctx, (r.L-r.a).toFixed(2), ox+(rw-aw)/2, oy+rh+12, 'center', null, r.id);
+      _cote(ctx, (r.l-r.b).toFixed(2), ox+rw+4, oy+(rh-bh)/2, 'left', null, r.id);
+      _cote(ctx, r.a.toFixed(2), ox+rw-aw/2, oy+rh-bh-3, 'center', 'a', r.id);
+      _cote(ctx, r.b.toFixed(2), ox+rw-aw+4, oy+rh-bh/2, 'left', 'b', r.id);
+    } else {
+      _cote(ctx, r.L.toFixed(2), ox+rw/2, oy+rh+12, 'center', null, r.id);
+      _cote(ctx, r.l.toFixed(2), ox+rw+4, oy+rh/2, 'left', null, r.id);
+    }
+    if(sel){
+      const hsz=13, hd=[[ox+rw,oy+rh/2,'e'],[ox+rw/2,oy+rh,'s'],[ox+rw,oy+rh,'se']];
+      hd.forEach(([hx,hy,mode])=>{ ctx.fillStyle='#1C2B3A'; ctx.fillRect(hx-hsz/2,hy-hsz/2,hsz,hsz); ctx.fillStyle='#fff'; ctx.font='700 9px Inter'; ctx.textAlign='center'; ctx.fillText(mode==='s'?'↕':mode==='e'?'↔':'⤡',hx,hy+3); resizeHandles.push({x:hx-hsz,y:hy-hsz,w:hsz*2,h:hsz*2,id:r.id,mode}); });
+    }
   });
+  (p.walls||[]).forEach(w => {
+    const sel = planSel && planSel.type==='wall' && planSel.id===w.id;
+    const x1=mx(w.x), y1=mx(w.y), ep=Math.max(3,(w.ep||0.1)*sc), ln=w.len*sc;
+    ctx.fillStyle = sel?'#1C2B3A':'#5C6670';
+    if(w.dir==='h') ctx.fillRect(x1, y1-ep/2, ln, ep); else ctx.fillRect(x1-ep/2, y1, ep, ln);
+    if(sel){ ctx.strokeStyle='#E8610A'; ctx.lineWidth=1.5; if(w.dir==='h') ctx.strokeRect(x1, y1-ep/2, ln, ep); else ctx.strokeRect(x1-ep/2, y1, ep, ln); }
+    ctx.fillStyle = sel?'#1C2B3A':'#5C6670'; ctx.font='700 9px Inter'; ctx.textAlign='center';
+    if(w.dir==='h') ctx.fillText(w.len.toFixed(2), x1+ln/2, y1-ep/2-5);
+    else ctx.fillText(w.len.toFixed(2), x1+ep/2+12, y1+ln/2);
+  });
+}
+function planPx(e){
+  const cv = document.getElementById('plan-canvas'); const rect = cv.getBoundingClientRect();
+  return { px:(e.clientX-rect.left)*(cv.width/rect.width), py:(e.clientY-rect.top)*(cv.height/rect.height) };
+}
+function planM(e){ const q = planPx(e); return { x:px2m(q.px), y:px2m(q.py) }; }
+function distSeg(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, l2=dx*dx+dy*dy||1; let tt=((px-x1)*dx+(py-y1)*dy)/l2; tt=Math.max(0,Math.min(1,tt));
+  return Math.hypot(px-(x1+tt*dx), py-(y1+tt*dy));
+}
+function planHit(mxp,myp){
+  const p = currentProject(); const walls = p.walls||[];
+  for(let i=walls.length-1;i>=0;i--){ const w=walls[i];
+    const x2=w.dir==='h'?w.x+w.len:w.x, y2=w.dir==='v'?w.y+w.len:w.y;
+    if(distSeg(mxp,myp,w.x,w.y,x2,y2)<0.35) return { type:'wall', id:w.id };
+  }
+  for(let i=p.rooms.length-1;i>=0;i--){ const r=p.rooms[i];
+    if(mxp>=r.x && mxp<=r.x+r.L && myp>=r.y && myp<=r.y+r.l) return { type:'room', id:r.id };
+  }
+  return null;
+}
+function snapMag(obj, isWall){
+  const p = currentProject(); const xs=[], ys=[];
+  p.rooms.forEach(o=>{ if(isWall||o.id!==obj.id){ xs.push(o.x,o.x+o.L); ys.push(o.y,o.y+o.l); } });
+  (p.walls||[]).forEach(w=>{ if(isWall&&w.id===obj.id) return; xs.push(w.x); ys.push(w.y); if(w.dir==='h')xs.push(w.x+w.len); else ys.push(w.y+w.len); });
+  const edgesX = isWall ? [obj.x] : [obj.x, obj.x+obj.L];
+  const edgesY = isWall ? [obj.y] : [obj.y, obj.y+obj.l];
+  let best=PLAN_MAG, dx=0; edgesX.forEach(ex=>xs.forEach(X=>{ const d=X-ex; if(Math.abs(d)<best){best=Math.abs(d);dx=d;} }));
+  best=PLAN_MAG; let dy=0; edgesY.forEach(ey=>ys.forEach(Y=>{ const d=Y-ey; if(Math.abs(d)<best){best=Math.abs(d);dy=d;} }));
+  obj.x+=dx; obj.y+=dy;
+}
+function planDown(e){
+  e.preventDefault();
+  const q = planPx(e);
+  for(const hs of coteHotspots){ if(q.px>=hs.x && q.px<=hs.x+hs.w && q.py>=hs.y && q.py<=hs.y+hs.h){ openCoteInput(hs); return; } }
+  for(const h of resizeHandles){ if(q.px>=h.x && q.px<=h.x+h.w && q.py>=h.y && q.py<=h.y+h.h){ planDrag = { type:'resize', id:h.id, mode:h.mode, moved:false }; return; } }
+  const m = planM(e); const hit = planHit(m.x, m.y); planSel = hit;
+  if(hit){
+    const p = currentProject();
+    const obj = hit.type==='room'? p.rooms.find(r=>r.id===hit.id) : p.walls.find(w=>w.id===hit.id);
+    planDrag = { type:hit.type, id:hit.id, ox:m.x-obj.x, oy:m.y-obj.y, moved:false };
+  } else {
+    planDrag = { type:'pan', sx:q.px, sy:q.py, ox0:planOffX, oy0:planOffY, moved:false };
+  }
+  drawPlan(); updateActions();
+}
+function planMove(e){
+  if(!planDrag) return; e.preventDefault();
+  if(planDrag.type==='pan'){ const q=planPx(e); planOffX=planDrag.ox0+(q.px-planDrag.sx); planOffY=planDrag.oy0+(q.py-planDrag.sy); drawPlan(); return; }
+  const m = planM(e); const p = currentProject();
+  if(planDrag.type==='resize'){
+    const r = p.rooms.find(x=>x.id===planDrag.id); if(!r) return;
+    if(planDrag.mode==='e'||planDrag.mode==='se') r.L = Math.max(0.5, Math.round((m.x - r.x)/PLAN_SNAP)*PLAN_SNAP);
+    if(planDrag.mode==='s'||planDrag.mode==='se') r.l = Math.max(0.5, Math.round((m.y - r.y)/PLAN_SNAP)*PLAN_SNAP);
+    if(r.forme==='L'){ if(r.a>=r.L) r.a=Math.max(0.25, r.L-0.25); if(r.b>=r.l) r.b=Math.max(0.25, r.l-0.25); }
+    planDrag.moved=true; drawPlan(); return;
+  }
+  const obj = planDrag.type==='room'? p.rooms.find(r=>r.id===planDrag.id) : p.walls.find(w=>w.id===planDrag.id);
+  if(!obj) return;
+  obj.x = Math.max(0, Math.round((m.x-planDrag.ox)/PLAN_SNAP)*PLAN_SNAP);
+  obj.y = Math.max(0, Math.round((m.y-planDrag.oy)/PLAN_SNAP)*PLAN_SNAP);
+  snapMag(obj, planDrag.type==='wall');
+  planDrag.moved = true; drawPlan();
+}
+function planUp(){ if(planDrag){ if(planDrag.moved){ saveProjects(); renderRooms(); } planDrag=null; } }
+function initPlanInteract(){
+  const cv = document.getElementById('plan-canvas'); if(!cv || cv._init) return; cv._init = true;
+  cv.style.touchAction = 'none';
+  cv.addEventListener('pointerdown', planDown);
+  cv.addEventListener('pointermove', planMove);
+  window.addEventListener('pointerup', planUp);
+  window.addEventListener('resize', ()=>{ const m=document.getElementById('plan-modal'); if(m && m.style.display==='flex') sizePlanCanvas(); });
+  const inp = document.getElementById('cote-input');
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); inp.blur(); } });
+  inp.addEventListener('blur', commitCote);
+}
+function sizePlanCanvas(){
+  const cv=document.getElementById('plan-canvas'), wrap=document.getElementById('plan-canvas-wrap');
+  if(!cv||!wrap) return;
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  if(w>0&&h>0){ cv.width=w; cv.height=h; }
+  drawPlan();
 }
 
 function autofillFromRoom(roomId){
@@ -3217,34 +3585,86 @@ function autofillFromRoom(roomId){
   const SOL = ['carrelage','chape','dalle-beton','plafond'];
   const MUR = ['doublage','cloison','peinture','enduit'];
   const perim = roomPerim(r), h = r.h || 2.5;
-  closePlan();
-  selectOuvrage(target);
+  closePlan(); selectOuvrage(target);
   if(target === 'electricite') selectSysteme('piece-seche');
   else if(target === 'carrelage') selectSysteme('sol');
   const setDim = (id,v) => { const e = document.getElementById('dim-' + id); if(e) e.value = Math.round(v*100)/100; };
   deductions = [];
-  if(SOL.includes(target)){
-    setDim('longueur', r.L); setDim('largeur', r.l);
-    if(r.forme === 'L'){ deductId++; deductions = [{ id: deductId, larg: r.a, haut: r.b }]; }
-  } else if(MUR.includes(target)){
-    setDim('longueur', perim); setDim('hauteur', h);
-  } else if(target === 'chauffage'){
-    setDim('longueur', r.L); setDim('largeur', r.l); setDim('hauteur', h);
-  } else if(target === 'electricite'){
-    setDim('longueur', r.L); setDim('largeur', r.l);
-  }
-  renderDeductions();
-  calculer();
+  if(SOL.includes(target)){ setDim('longueur', r.L); setDim('largeur', r.l); if(r.forme === 'L'){ deductId++; deductions = [{ id: deductId, larg: r.a, haut: r.b }]; } }
+  else if(MUR.includes(target)){ setDim('longueur', perim); setDim('hauteur', h); }
+  else if(target === 'chauffage'){ setDim('longueur', r.L); setDim('largeur', r.l); setDim('hauteur', h); }
+  else if(target === 'electricite'){ setDim('longueur', r.L); setDim('largeur', r.l); }
+  renderDeductions(); calculer();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Dimensions importées depuis « ' + r.nom + ' »');
 }
 
-function openPlan(){ renderRooms(); document.getElementById('plan-modal').style.display = 'flex'; }
+function openPlan(){ initPlanInteract(); document.getElementById('plan-modal').style.display='flex'; requestAnimationFrame(()=>{ sizePlanCanvas(); renderRooms(); }); }
 function closePlan(){ const m = document.getElementById('plan-modal'); if(m) m.style.display = 'none'; }
 
 function renderProjectBar(){
   const sel = document.getElementById('project-select');
   if(!sel) return;
-  sel.innerHTML = projects.map(p => `<option value="${p.id}" ${p.id===currentProjectId?'selected':''}>${p.nom}</option>`).join('');
+  sel.innerHTML = projects.map(p => `<option value="${p.id}" ${p.id===currentProjectId?'selected':''}>${esc(p.nom)}</option>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// LISTE DE COURSES (consolidation projet)
+// ════════════════════════════════════════════════════════════
+function addCurrentToProject(){
+  if(!lastMats || !lastMats.length){ alert('Calcule d\'abord un ouvrage.'); return; }
+  const p = currentProject(); if(!p) return;
+  if(!p.items) p.items = [];
+  const cfg = OUVRAGES[currentOuvrage];
+  const sysNom = (cfg.systemes.find(s=>s.id===currentSysteme)||{}).nom || '';
+  const lignes = lastMats.map((m,i)=>{
+    const puEl = document.getElementById('pu-'+i);
+    const pu = puEl ? (parseFloat(puEl.value)||0) : (lastPrices[i]||0);
+    return { nom:m.nom, qte:m.qte, unite:m.unite, pu };
+  });
+  const total = lignes.reduce((a,l)=>a + l.qte*l.pu, 0);
+  p.items.push({ id:'it'+Date.now()+Math.floor(Math.random()*1000), ouvrage:cfg.label, systeme:sysNom, lignes, total });
+  saveProjects();
+  const btn = document.getElementById('add-proj-btn');
+  if(btn){ const o = btn.textContent; btn.textContent = '✓ Ajouté au projet « '+p.nom+' »'; btn.disabled = true; setTimeout(()=>{ btn.textContent=o; btn.disabled=false; }, 1800); }
+}
+function aggregateItems(p){
+  const map = new Map(); let total = 0;
+  (p.items||[]).forEach(it => (it.lignes||[]).forEach(l => {
+    const key = l.nom+'|'+l.unite;
+    const cur = map.get(key) || { nom:l.nom, unite:l.unite, qte:0, cout:0, pu:l.pu||0 };
+    cur.qte += l.qte; cur.cout += l.qte*(l.pu||0); if(l.pu) cur.pu = l.pu;
+    map.set(key, cur); total += l.qte*(l.pu||0);
+  }));
+  return { lignes:[...map.values()], total };
+}
+function deleteItem(id){ const p = currentProject(); p.items = (p.items||[]).filter(i=>i.id!==id); saveProjects(); renderCourses(); }
+function openCourses(){ renderCourses(); document.getElementById('courses-modal').style.display = 'flex'; }
+function closeCourses(){ const m = document.getElementById('courses-modal'); if(m) m.style.display = 'none'; }
+function renderCourses(){
+  const p = currentProject(); if(!p) return;
+  document.getElementById('courses-project').textContent = p.nom;
+  const agg = aggregateItems(p);
+  let html = '';
+  if(!p.items || !p.items.length){
+    html = '<div class="plan-empty">Aucun ouvrage ajouté.<br>Calcule un ouvrage, puis appuie sur « Ajouter au projet ».</div>';
+  } else {
+    html += '<div class="cs-sec">Ouvrages du projet (' + p.items.length + ')</div>';
+    html += p.items.map(it => `
+      <div class="cs-ouvrage">
+        <div><div class="cs-ouv-nom">${esc(it.ouvrage)}${it.systeme?' — '+esc(it.systeme):''}</div><div class="cs-ouv-sub">${it.total.toFixed(2)} € HT · ${it.lignes.length} matériaux</div></div>
+        <button class="room-ic del" onclick="deleteItem('${it.id}')">✕</button>
+      </div>`).join('');
+    html += '<div class="cs-sec">Liste de courses consolidée</div>';
+    html += agg.lignes.map(l => `
+      <div class="cs-line">
+        <span class="cs-nom">${esc(l.nom)}</span>
+        <span class="cs-qte">${Math.round(l.qte*100)/100} ${l.unite}</span>
+        <span class="cs-cout">${l.cout?l.cout.toFixed(2)+' €':'—'}</span>
+      </div>`).join('');
+  }
+  document.getElementById('courses-list').innerHTML = html;
+  document.getElementById('courses-total').textContent = agg.total.toFixed(2) + ' € HT';
 }
 
 // ════════════════════════════════════════════════════════════
