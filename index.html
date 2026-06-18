@@ -617,7 +617,16 @@
 .btn-cancel-edit:hover { background: #F0EBE0; }
 .wall-form { margin-top: 14px; }
 .walls-title { font: 700 12px Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #5C6670; margin: 14px 0 8px; }
-.wall-card { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #E0DACE; border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; font: 500 12px Inter, sans-serif; color: #5C6670; }
+.wall-card { display: flex; flex-direction: column; gap: 7px; background: #fff; border: 1px solid #E0DACE; border-radius: 10px; padding: 9px 12px; margin-bottom: 8px; font: 500 12px Inter, sans-serif; color: #5C6670; }
+.wall-head { display: flex; justify-content: space-between; align-items: center; }
+.ouv-box { border-top: 1px dashed #E0DACE; padding-top: 6px; }
+.ouv-head { font: 700 11px Rajdhani, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #8A929B; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.ouv-add { background: #EFE9DD; color: #1C2B3A; border: none; border-radius: 6px; padding: 3px 8px; cursor: pointer; font: 600 11px Inter, sans-serif; }
+.ouv-add:hover { background: #E3DAC8; }
+.ouv-row { display: flex; align-items: center; gap: 4px; margin: 3px 0; font-size: 11px; }
+.ouv-row input { width: 50px; padding: 2px 4px; border: 1px solid #E0DACE; border-radius: 5px; font: 500 11px Inter, sans-serif; }
+.ouv-ic { font-size: 13px; }
+.ouv-del { margin-left: auto; background: none; border: none; color: #B04A3A; cursor: pointer; font-size: 12px; }
 .plan-hint { font: 500 11px Inter, sans-serif; color: #8A929B; margin-top: 8px; text-align: center; }
 .btn-shape { background: #fff; border: 1.5px solid #E8610A; color: #cf5408; border-radius: 8px; padding: 12px 8px; font: 700 13px Inter, sans-serif; cursor: pointer; }
 .btn-shape:hover { background: #FCEEE3; }
@@ -653,6 +662,8 @@
 .pa-del { background: #B04A3A; color: #fff; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font: 600 12px Inter, sans-serif; }
 .pa-del:hover { background: #933a2c; }
 .pa-sel { padding: 4px 6px; border: none; border-radius: 5px; font: 600 12px Inter, sans-serif; background: #fff; color: #1C2B3A; max-width: 160px; }
+.pa-btn { background: #2E4456; color: #fff; border: none; border-radius: 7px; padding: 5px 10px; cursor: pointer; font: 600 12px Inter, sans-serif; }
+.pa-btn:hover { background: #1C2B3A; }
 .share-btn.primary { background: #E8610A; color: #fff; }
 .courses-body { flex: 1; overflow: auto; padding: 14px 18px; background: #F4F1EB; }
 .cs-sec { font: 700 12px Rajdhani, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #5C6670; margin: 16px 0 8px; }
@@ -3212,9 +3223,15 @@ function loadProjects(){
   projects.forEach(p => {
     if(!p.walls) p.walls = [];
     if(!p.items) p.items = [];
-    p.walls.forEach(w=>{ if(w.ep===undefined) w.ep=0.072; });
+    p.walls.forEach(w=>{
+      if(w.ep===undefined) w.ep=0.072;
+      if(w.ax===undefined){ const ln=w.len||2, X=w.x||0, Y=w.y||0; w.ax=X; w.ay=Y; w.bx=(w.dir==='v')?X:X+ln; w.by=(w.dir==='v')?Y+ln:Y; delete w.dir; delete w.x; delete w.y; delete w.len; }
+      if(w.roomId===undefined) w.roomId = roomAt(p, (w.ax+w.bx)/2, (w.ay+w.by)/2);
+      if(!w.openings) w.openings=[];
+    });
     (p.rooms || []).forEach(r => {
       if(r.x === undefined || r.y === undefined){ r.x = mx; r.y = 0.25; mx += (r.L || 3) + 0.5; }
+      if(!r.openings) r.openings=[];
     });
   });
 }
@@ -3249,7 +3266,7 @@ function roomPerim(r){ return 2*(r.L + r.l); }
 function roomVolume(r){ return roomSurface(r) * (r.h || 2.5); }
 
 const PLAN_SCALE = 28, PLAN_MARGIN = 26, PLAN_SNAP = 0.25, PLAN_MAG = 0.35;
-let planSel = null, planDrag = null, coteHotspots = [], resizeHandles = [], coteEdit = null;
+let planSel = null, planDrag = null, coteHotspots = [], resizeHandles = [], wallHandles = [], coteEdit = null;
 let planZoom = 1, planOffX = 0, planOffY = 0;
 function planSc(){ return PLAN_SCALE * planZoom; }
 function m2px(v){ return PLAN_MARGIN + planOffX + v * planSc(); }
@@ -3280,7 +3297,7 @@ function dropRoom(forme){
   const base = forme === 'L'
     ? { forme:'L', L:5, l:4, a:2, b:1.5, h:2.5 }
     : { forme:'rect', L:4, l:3, a:0, b:0, h:2.5 };
-  const room = Object.assign({ id:'r'+Date.now()+Math.floor(Math.random()*1000), nom:'Pièce '+(p.rooms.length+1) }, base);
+  const room = Object.assign({ id:'r'+Date.now()+Math.floor(Math.random()*1000), nom:'Pièce '+(p.rooms.length+1), openings:[] }, base);
   placeNewRoom(p, room); p.rooms.push(room);
   planSel = { type:'room', id:room.id };
   saveProjects(); renderRooms();
@@ -3296,10 +3313,14 @@ function editHeight(id){
 }
 function openCoteInput(hs){
   const cv = document.getElementById('plan-canvas');
-  const r = currentProject().rooms.find(x=>x.id===hs.roomId); if(!r) return;
-  coteEdit = { roomId:hs.roomId, param:hs.param };
   const inp = document.getElementById('cote-input');
-  inp.value = r[hs.param];
+  if(hs.wallId){
+    const w = currentProject().walls.find(x=>x.id===hs.wallId); if(!w) return;
+    coteEdit = { wallId:hs.wallId }; inp.value = wallLen(w).toFixed(2);
+  } else {
+    const r = currentProject().rooms.find(x=>x.id===hs.roomId); if(!r) return;
+    coteEdit = { roomId:hs.roomId, param:hs.param }; inp.value = r[hs.param];
+  }
   inp.style.left = Math.max(2, Math.min(hs.x + hs.w/2 - 32, cv.width - 66)) + 'px';
   inp.style.top  = Math.max(2, hs.y - 6) + 'px';
   inp.style.display = 'block';
@@ -3309,8 +3330,13 @@ function commitCote(){
   if(!coteEdit) return;
   const inp = document.getElementById('cote-input');
   const v = parseFloat((inp.value||'').replace(',','.'));
-  const r = currentProject().rooms.find(x=>x.id===coteEdit.roomId);
-  const pm = coteEdit.param; coteEdit = null; inp.style.display = 'none';
+  const ce = coteEdit; coteEdit = null; inp.style.display = 'none';
+  if(ce.wallId){
+    const w = currentProject().walls.find(x=>x.id===ce.wallId);
+    if(w && v>0){ const a=wallAngle(w); w.bx=w.ax+v*Math.cos(a); w.by=w.ay+v*Math.sin(a); saveProjects(); }
+    renderRooms(); return;
+  }
+  const r = currentProject().rooms.find(x=>x.id===ce.roomId); const pm = ce.param;
   if(r && v>0){
     if(pm==='a' && v>=r.L){} else if(pm==='b' && v>=r.l){} else { r[pm]=v; saveProjects(); }
   }
@@ -3322,30 +3348,58 @@ function deleteRoom(id){
   saveProjects(); renderRooms();
 }
 
-// ── Cloisons ──
+// ── Cloisons (segment A→B, angle libre, rattaché à une pièce) ──
+function wallLen(w){ return Math.hypot(w.bx-w.ax, w.by-w.ay); }
+function wallMid(w){ return { x:(w.ax+w.bx)/2, y:(w.ay+w.by)/2 }; }
+function wallAngle(w){ return Math.atan2(w.by-w.ay, w.bx-w.ax); }
+function roomAt(p, x, y){ for(let i=p.rooms.length-1;i>=0;i--){ const r=p.rooms[i]; if(x>=r.x&&x<=r.x+r.L&&y>=r.y&&y<=r.y+r.l) return r.id; } return null; }
+// accroche un point aux coins de pièces / extrémités d'autres cloisons, sinon à la grille
+function snapPoint(x, y, exclId){
+  const p = currentProject(); let rx=x, ry=y, bx=PLAN_MAG, by=PLAN_MAG;
+  const XS=[], YS=[];
+  p.rooms.forEach(r=>{ XS.push(r.x, r.x+r.L); YS.push(r.y, r.y+r.l); });
+  (p.walls||[]).forEach(w=>{ if(w.id===exclId) return; XS.push(w.ax, w.bx); YS.push(w.ay, w.by); });
+  XS.forEach(v=>{ const d=Math.abs(v-x); if(d<bx){ bx=d; rx=v; } });
+  YS.forEach(v=>{ const d=Math.abs(v-y); if(d<by){ by=d; ry=v; } });
+  if(bx===PLAN_MAG) rx = Math.round(x/PLAN_SNAP)*PLAN_SNAP;
+  if(by===PLAN_MAG) ry = Math.round(y/PLAN_SNAP)*PLAN_SNAP;
+  return { x:Math.max(0,rx), y:Math.max(0,ry) };
+}
+// verrou angulaire : aligne l'extrémité sur un axe tous les 15° (comportement logiciel de plan)
+function snapAngle(ax, ay, x, y){
+  const d = Math.hypot(x-ax, y-ay); if(d<0.01) return { x, y };
+  let ang = Math.atan2(y-ay, x-ax);
+  const step = Math.PI/12, snapped = Math.round(ang/step)*step;
+  if(Math.abs(ang-snapped) < 0.14) ang = snapped;
+  return { x: ax + d*Math.cos(ang), y: ay + d*Math.sin(ang) };
+}
 function addWall(){
   const p = currentProject(); if(!p) return;
-  const dir = document.getElementById('wall-dir').value;
+  const dir = (document.getElementById('wall-dir')||{}).value || 'h';
   const len = parseFloat((_v('wall-len')||'').replace(',','.')) || 2;
-  const worldW = (360 - 2*PLAN_MARGIN)/PLAN_SCALE, worldH = (290 - 2*PLAN_MARGIN)/PLAN_SCALE;
-  const w = { id:'w'+Date.now()+Math.floor(Math.random()*1000), dir, len, ep:0.072,
-    x: Math.max(0.5, worldW/2 - (dir==='h'?len/2:0)), y: Math.max(0.5, worldH/2 - (dir==='v'?len/2:0)) };
+  let cx, cy, rid=null;
+  const selRoom = planSel && planSel.type==='room' ? p.rooms.find(r=>r.id===planSel.id) : null;
+  const base = selRoom || p.rooms[0];
+  if(base){ cx = base.x + base.L/2; cy = base.y + base.l/2; rid = base.id; }
+  else { cx = (360-2*PLAN_MARGIN)/PLAN_SCALE/2; cy = (290-2*PLAN_MARGIN)/PLAN_SCALE/2; }
+  const w = { id:'w'+Date.now()+Math.floor(Math.random()*1000), roomId:rid, ep:0.072, openings:[],
+    ax: dir==='h'? cx-len/2 : cx, ay: dir==='v'? cy-len/2 : cy,
+    bx: dir==='h'? cx+len/2 : cx, by: dir==='v'? cy+len/2 : cy };
   p.walls.push(w); planSel = { type:'wall', id:w.id }; saveProjects(); renderRooms();
-}
-function editWallLen(id){
-  const w = currentProject().walls.find(x=>x.id===id); if(!w) return;
-  const v = parseFloat((prompt('Longueur de la cloison (m) :', w.len)||'').replace(',','.'));
-  if(v && v>0){ w.len = v; saveProjects(); renderRooms(); }
 }
 function deleteWall(id){
   const p = currentProject(); p.walls = p.walls.filter(w => w.id !== id);
   if(planSel && planSel.type==='wall' && planSel.id===id) planSel = null;
   saveProjects(); renderRooms();
 }
-function setWallThickness(id, cm){
-  const w = currentProject().walls.find(x=>x.id===id);
-  const n = parseFloat((''+cm).replace(',','.'));
-  if(w && n>0){ w.ep = Math.max(0.01, n/100); saveProjects(); drawPlan(); }
+function rotateWall(){
+  if(!planSel || planSel.type!=='wall') return;
+  const w = currentProject().walls.find(x=>x.id===planSel.id); if(!w) return;
+  const m = wallMid(w), rot=(px,py)=>({ x:m.x-(py-m.y), y:m.y+(px-m.x) });
+  const A=rot(w.ax,w.ay), B=rot(w.bx,w.by);
+  w.ax=Math.max(0,Math.round(A.x/PLAN_SNAP)*PLAN_SNAP); w.ay=Math.max(0,Math.round(A.y/PLAN_SNAP)*PLAN_SNAP);
+  w.bx=Math.max(0,Math.round(B.x/PLAN_SNAP)*PLAN_SNAP); w.by=Math.max(0,Math.round(B.y/PLAN_SNAP)*PLAN_SNAP);
+  saveProjects(); drawPlan(); updateActions();
 }
 const WALL_TYPES = [
   [0.05,  'Carreau de plâtre 50 mm'],
@@ -3379,7 +3433,7 @@ function updateActions(){
     el.innerHTML = '<span class="pa-lbl">'+(r.nom||'Pièce')+'</span><button class="pa-del" onclick="deleteSelection()">🗑 Supprimer</button>';
   } else {
     const w = p.walls.find(x=>x.id===planSel.id); if(!w){ el.style.display='none'; return; }
-    el.innerHTML = '<span class="pa-lbl">Cloison</span><select class="pa-sel" onchange="setWallEp(\''+w.id+'\',this.value)">'+wallOptions(w.ep||0.072)+'</select><button class="pa-del" onclick="deleteSelection()">🗑</button>';
+    el.innerHTML = '<span class="pa-lbl">Cloison '+wallLen(w).toFixed(2)+' m</span><button class="pa-btn" onclick="rotateWall()">⟳ 90°</button><select class="pa-sel" onchange="setWallEp(\''+w.id+'\',this.value)">'+wallOptions(w.ep||0.072)+'</select><button class="pa-del" onclick="deleteSelection()">🗑</button>';
   }
   el.style.display='flex';
 }
@@ -3394,7 +3448,8 @@ function renderRooms(){
   const list = document.getElementById('rooms-list');
   const sumS = (p.rooms.reduce((a,r)=>a+roomSurface(r),0)).toFixed(2);
   document.getElementById('plan-project-name').textContent = p.nom;
-  document.getElementById('plan-total').textContent = p.rooms.length + ' pièce(s) · ' + sumS + ' m² · ' + (p.walls?p.walls.length:0) + ' cloison(s)';
+  const nbOuv = p.rooms.reduce((a,r)=>a+((r.openings||[]).length),0) + (p.walls||[]).reduce((a,w)=>a+((w.openings||[]).length),0);
+  document.getElementById('plan-total').textContent = p.rooms.length + ' pièce(s) · ' + sumS + ' m² · ' + (p.walls?p.walls.length:0) + ' cloison(s)' + (nbOuv? ' · '+nbOuv+' ouverture(s)':'');
   const opt = (arr)=>arr.map(([k,n])=>`<option value="${k}">${n}</option>`).join('');
   let html = '';
   if(!p.rooms.length){ html += '<div class="plan-empty">Dépose un rectangle ou un L sur le plan pour commencer.</div>'; }
@@ -3411,14 +3466,19 @@ function renderRooms(){
           <select id="af-${r.id}"><optgroup label="Sol / plafond">${opt(AF_SOL)}</optgroup><optgroup label="Murs">${opt(AF_MUR)}</optgroup><optgroup label="Technique">${opt(AF_AUTRE)}</optgroup></select>
           <button class="btn-af" onclick="autofillFromRoom('${r.id}')">Calculer ⟶</button>
         </div>
+        ${openingsHtml('room', r.id, r.openings)}
       </div>`).join('');
   }
   if(p.walls && p.walls.length){
     html += '<div class="walls-title">Cloisons</div>';
     html += p.walls.map(w => `
       <div class="wall-card ${planSel&&planSel.type==='wall'&&planSel.id===w.id?'sel':''}">
-        <span>Cloison ${w.dir==='h'?'horiz.':'vert.'} · <input class="card-h" type="number" step="0.1" value="${w.len}" onchange="setWallLen('${w.id}',this.value)"> m</span>
-        <button class="room-ic del" onclick="deleteWall('${w.id}')">✕</button>
+        <div class="wall-head">
+          <span>Cloison · <input class="card-h" type="number" step="0.1" value="${wallLen(w).toFixed(2)}" onchange="setWallLen('${w.id}',this.value)"> m</span>
+          <button class="room-ic del" onclick="deleteWall('${w.id}')">✕</button>
+        </div>
+        ${openingsHtml('wall', w.id, w.openings)}
+        <button class="btn-af" onclick="autofillFromWall('${w.id}')">Calculer ⟶</button>
       </div>`).join('');
   }
   list.innerHTML = html;
@@ -3427,7 +3487,7 @@ function renderRooms(){
 }
 function setRoomName(id,v){ const r=currentProject().rooms.find(x=>x.id===id); if(r){ r.nom=(v||'').trim()||r.nom; saveProjects(); drawPlan(); } }
 function setRoomHeight(id,v){ const r=currentProject().rooms.find(x=>x.id===id); const n=parseFloat((''+v).replace(',','.')); if(r&&n>0){ r.h=n; saveProjects(); renderRooms(); } }
-function setWallLen(id,v){ const w=currentProject().walls.find(x=>x.id===id); const n=parseFloat((''+v).replace(',','.')); if(w&&n>0){ w.len=n; saveProjects(); renderRooms(); } }
+function setWallLen(id,v){ const w=currentProject().walls.find(x=>x.id===id); const n=parseFloat((''+v).replace(',','.')); if(w&&n>0){ const a=wallAngle(w); w.bx=w.ax+n*Math.cos(a); w.by=w.ay+n*Math.sin(a); saveProjects(); renderRooms(); } }
 
 // ── Dessin du plan coté ──
 function _cote(ctx, txt, x, y, align, param, roomId){
@@ -3443,7 +3503,7 @@ function _cote(ctx, txt, x, y, align, param, roomId){
 function drawPlan(){
   const cv = document.getElementById('plan-canvas'); if(!cv) return;
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
-  coteHotspots = []; resizeHandles = [];
+  coteHotspots = []; resizeHandles = []; wallHandles = [];
   ctx.clearRect(0,0,W,H); ctx.fillStyle = '#FBFAF7'; ctx.fillRect(0,0,W,H);
   const mx = m2px, sc = planSc();
   ctx.strokeStyle = '#ECE6DA'; ctx.lineWidth = 1;
@@ -3487,13 +3547,49 @@ function drawPlan(){
   });
   (p.walls||[]).forEach(w => {
     const sel = planSel && planSel.type==='wall' && planSel.id===w.id;
-    const x1=mx(w.x), y1=mx(w.y), ep=Math.max(3,(w.ep||0.1)*sc), ln=w.len*sc;
+    const ax=mx(w.ax), ay=mx(w.ay), bx=mx(w.bx), by=mx(w.by), ep=Math.max(3,(w.ep||0.1)*sc);
+    const ang=Math.atan2(by-ay, bx-ax), nx=Math.sin(ang)*ep/2, ny=-Math.cos(ang)*ep/2;
     ctx.fillStyle = sel?'#1C2B3A':'#5C6670';
-    if(w.dir==='h') ctx.fillRect(x1, y1-ep/2, ln, ep); else ctx.fillRect(x1-ep/2, y1, ep, ln);
-    if(sel){ ctx.strokeStyle='#E8610A'; ctx.lineWidth=1.5; if(w.dir==='h') ctx.strokeRect(x1, y1-ep/2, ln, ep); else ctx.strokeRect(x1-ep/2, y1, ep, ln); }
-    ctx.fillStyle = sel?'#1C2B3A':'#5C6670'; ctx.font='700 9px Inter'; ctx.textAlign='center';
-    if(w.dir==='h') ctx.fillText(w.len.toFixed(2), x1+ln/2, y1-ep/2-5);
-    else ctx.fillText(w.len.toFixed(2), x1+ep/2+12, y1+ln/2);
+    ctx.beginPath(); ctx.moveTo(ax+nx,ay+ny); ctx.lineTo(bx+nx,by+ny); ctx.lineTo(bx-nx,by-ny); ctx.lineTo(ax-nx,ay-ny); ctx.closePath(); ctx.fill();
+    if(sel){ ctx.strokeStyle='#E8610A'; ctx.lineWidth=2; ctx.stroke(); }
+    const len=wallLen(w), midx=(ax+bx)/2, midy=(ay+by)/2, lab=len.toFixed(2);
+    const offx=Math.sin(ang)*(ep/2+9), offy=-Math.cos(ang)*(ep/2+9);
+    ctx.fillStyle = sel?'#E8610A':'#5C6670'; ctx.font=(sel?'700':'600')+' 9px Inter'; ctx.textAlign='center';
+    ctx.fillText(lab, midx+offx, midy+offy+3);
+    if(sel){
+      const tw=ctx.measureText(lab).width;
+      coteHotspots.push({ x:midx+offx-tw/2-6, y:midy+offy-8, w:tw+12, h:16, wallId:w.id });
+      [[ax,ay,'a'],[bx,by,'b']].forEach(([hx,hy,end])=>{
+        ctx.fillStyle='#E8610A'; ctx.beginPath(); ctx.arc(hx,hy,7,0,2*Math.PI); ctx.fill();
+        ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(hx,hy,3,0,2*Math.PI); ctx.fill();
+        wallHandles.push({ x:hx-13, y:hy-13, w:26, h:26, id:w.id, end });
+      });
+    }
+  });
+  drawOpenings(ctx, mx, sc);
+}
+function drawOpenings(ctx, mx, sc){
+  const p=currentProject();
+  (p.walls||[]).forEach(w=>{
+    const ops=w.openings||[]; if(!ops.length) return;
+    const ang=Math.atan2(w.by-w.ay, w.bx-w.ax), L=wallLen(w), ux=Math.cos(ang), uy=Math.sin(ang), epx=(w.ep||0.1)*sc;
+    ops.forEach((o,i)=>{
+      const k=(i+1)/(ops.length+1), cx=w.ax+(w.bx-w.ax)*k, cy=w.ay+(w.by-w.ay)*k, half=Math.min(o.larg,L*0.9)/2;
+      ctx.strokeStyle=o.type==='porte'?'#C8902B':'#2F77B5'; ctx.lineWidth=Math.max(4,epx+2);
+      ctx.beginPath(); ctx.moveTo(mx(cx-ux*half),mx(cy-uy*half)); ctx.lineTo(mx(cx+ux*half),mx(cy+uy*half)); ctx.stroke();
+      ctx.fillStyle=o.type==='porte'?'#C8902B':'#2F77B5'; ctx.font='700 8px Inter'; ctx.textAlign='center';
+      ctx.fillText(o.type==='porte'?'P':'F', mx(cx)+Math.sin(ang)*(epx/2+8), mx(cy)-Math.cos(ang)*(epx/2+8)+3);
+    });
+  });
+  p.rooms.forEach(r=>{
+    const ops=r.openings||[]; if(!ops.length) return; const y=mx(r.y);
+    ops.forEach((o,i)=>{
+      const k=(i+1)/(ops.length+1), cx=r.x+r.L*k, half=Math.min(o.larg,r.L*0.45)/2;
+      ctx.strokeStyle=o.type==='porte'?'#C8902B':'#2F77B5'; ctx.lineWidth=4;
+      ctx.beginPath(); ctx.moveTo(mx(cx-half),y); ctx.lineTo(mx(cx+half),y); ctx.stroke();
+      ctx.fillStyle=o.type==='porte'?'#C8902B':'#2F77B5'; ctx.font='700 8px Inter'; ctx.textAlign='center';
+      ctx.fillText(o.type==='porte'?'P':'F', mx(cx), y-4);
+    });
   });
 }
 function planPx(e){
@@ -3508,20 +3604,18 @@ function distSeg(px,py,x1,y1,x2,y2){
 function planHit(mxp,myp){
   const p = currentProject(); const walls = p.walls||[];
   for(let i=walls.length-1;i>=0;i--){ const w=walls[i];
-    const x2=w.dir==='h'?w.x+w.len:w.x, y2=w.dir==='v'?w.y+w.len:w.y;
-    if(distSeg(mxp,myp,w.x,w.y,x2,y2)<0.35) return { type:'wall', id:w.id };
+    if(distSeg(mxp,myp,w.ax,w.ay,w.bx,w.by) < Math.max(0.3,(w.ep||0.1)/2+0.12)) return { type:'wall', id:w.id };
   }
   for(let i=p.rooms.length-1;i>=0;i--){ const r=p.rooms[i];
     if(mxp>=r.x && mxp<=r.x+r.L && myp>=r.y && myp<=r.y+r.l) return { type:'room', id:r.id };
   }
   return null;
 }
-function snapMag(obj, isWall){
+function snapMag(obj){
   const p = currentProject(); const xs=[], ys=[];
-  p.rooms.forEach(o=>{ if(isWall||o.id!==obj.id){ xs.push(o.x,o.x+o.L); ys.push(o.y,o.y+o.l); } });
-  (p.walls||[]).forEach(w=>{ if(isWall&&w.id===obj.id) return; xs.push(w.x); ys.push(w.y); if(w.dir==='h')xs.push(w.x+w.len); else ys.push(w.y+w.len); });
-  const edgesX = isWall ? [obj.x] : [obj.x, obj.x+obj.L];
-  const edgesY = isWall ? [obj.y] : [obj.y, obj.y+obj.l];
+  p.rooms.forEach(o=>{ if(o.id!==obj.id){ xs.push(o.x,o.x+o.L); ys.push(o.y,o.y+o.l); } });
+  (p.walls||[]).forEach(w=>{ xs.push(w.ax,w.bx); ys.push(w.ay,w.by); });
+  const edgesX = [obj.x, obj.x+obj.L], edgesY = [obj.y, obj.y+obj.l];
   let best=PLAN_MAG, dx=0; edgesX.forEach(ex=>xs.forEach(X=>{ const d=X-ex; if(Math.abs(d)<best){best=Math.abs(d);dx=d;} }));
   best=PLAN_MAG; let dy=0; edgesY.forEach(ey=>ys.forEach(Y=>{ const d=Y-ey; if(Math.abs(d)<best){best=Math.abs(d);dy=d;} }));
   obj.x+=dx; obj.y+=dy;
@@ -3530,12 +3624,16 @@ function planDown(e){
   e.preventDefault();
   const q = planPx(e);
   for(const hs of coteHotspots){ if(q.px>=hs.x && q.px<=hs.x+hs.w && q.py>=hs.y && q.py<=hs.y+hs.h){ openCoteInput(hs); return; } }
+  for(const h of wallHandles){ if(q.px>=h.x && q.px<=h.x+h.w && q.py>=h.y && q.py<=h.y+h.h){ planDrag = { type:'wallend', id:h.id, end:h.end, moved:false }; return; } }
   for(const h of resizeHandles){ if(q.px>=h.x && q.px<=h.x+h.w && q.py>=h.y && q.py<=h.y+h.h){ planDrag = { type:'resize', id:h.id, mode:h.mode, moved:false }; return; } }
   const m = planM(e); const hit = planHit(m.x, m.y); planSel = hit;
-  if(hit){
-    const p = currentProject();
-    const obj = hit.type==='room'? p.rooms.find(r=>r.id===hit.id) : p.walls.find(w=>w.id===hit.id);
-    planDrag = { type:hit.type, id:hit.id, ox:m.x-obj.x, oy:m.y-obj.y, moved:false };
+  const p = currentProject();
+  if(hit && hit.type==='room'){
+    const r = p.rooms.find(x=>x.id===hit.id);
+    planDrag = { type:'room', id:hit.id, ox:m.x-r.x, oy:m.y-r.y, px:r.x, py:r.y, moved:false };
+  } else if(hit && hit.type==='wall'){
+    const w = p.walls.find(x=>x.id===hit.id);
+    planDrag = { type:'wall', id:hit.id, ox:m.x-w.ax, oy:m.y-w.ay, moved:false };
   } else {
     planDrag = { type:'pan', sx:q.px, sy:q.py, ox0:planOffX, oy0:planOffY, moved:false };
   }
@@ -3552,12 +3650,28 @@ function planMove(e){
     if(r.forme==='L'){ if(r.a>=r.L) r.a=Math.max(0.25, r.L-0.25); if(r.b>=r.l) r.b=Math.max(0.25, r.l-0.25); }
     planDrag.moved=true; drawPlan(); return;
   }
-  const obj = planDrag.type==='room'? p.rooms.find(r=>r.id===planDrag.id) : p.walls.find(w=>w.id===planDrag.id);
-  if(!obj) return;
-  obj.x = Math.max(0, Math.round((m.x-planDrag.ox)/PLAN_SNAP)*PLAN_SNAP);
-  obj.y = Math.max(0, Math.round((m.y-planDrag.oy)/PLAN_SNAP)*PLAN_SNAP);
-  snapMag(obj, planDrag.type==='wall');
-  planDrag.moved = true; drawPlan();
+  if(planDrag.type==='wallend'){
+    const w = p.walls.find(x=>x.id===planDrag.id); if(!w) return;
+    const fixed = planDrag.end==='a' ? {x:w.bx,y:w.by} : {x:w.ax,y:w.ay};
+    let pt = snapPoint(m.x, m.y, w.id);
+    pt = snapAngle(fixed.x, fixed.y, pt.x, pt.y);
+    if(planDrag.end==='a'){ w.ax=pt.x; w.ay=pt.y; } else { w.bx=pt.x; w.by=pt.y; }
+    planDrag.moved=true; drawPlan(); return;
+  }
+  if(planDrag.type==='wall'){
+    const w = p.walls.find(x=>x.id===planDrag.id); if(!w) return;
+    const len=wallLen(w), ang=wallAngle(w), na=snapPoint(m.x-planDrag.ox, m.y-planDrag.oy, w.id);
+    w.ax=na.x; w.ay=na.y; w.bx=na.x+len*Math.cos(ang); w.by=na.y+len*Math.sin(ang);
+    w.roomId = roomAt(p, (w.ax+w.bx)/2, (w.ay+w.by)/2);
+    planDrag.moved=true; drawPlan(); return;
+  }
+  const r = p.rooms.find(x=>x.id===planDrag.id); if(!r) return;
+  r.x = Math.max(0, Math.round((m.x-planDrag.ox)/PLAN_SNAP)*PLAN_SNAP);
+  r.y = Math.max(0, Math.round((m.y-planDrag.oy)/PLAN_SNAP)*PLAN_SNAP);
+  snapMag(r);
+  const dx=r.x-planDrag.px, dy=r.y-planDrag.py;
+  if(dx||dy){ (p.walls||[]).forEach(w=>{ if(w.roomId===r.id){ w.ax+=dx; w.ay+=dy; w.bx+=dx; w.by+=dy; } }); }
+  planDrag.px=r.x; planDrag.py=r.y; planDrag.moved=true; drawPlan();
 }
 function planUp(){ if(planDrag){ if(planDrag.moved){ saveProjects(); renderRooms(); } planDrag=null; } }
 function initPlanInteract(){
@@ -3579,6 +3693,60 @@ function sizePlanCanvas(){
   drawPlan();
 }
 
+// ── Portes & fenêtres (ouvertures) ──
+const OUV_DEF = { porte: {larg:0.83, haut:2.04}, fenetre: {larg:1.20, haut:1.15} };
+function ouvHost(hostType, hostId){
+  const p=currentProject();
+  const host = hostType==='wall' ? (p.walls||[]).find(w=>w.id===hostId) : p.rooms.find(r=>r.id===hostId);
+  if(host && !host.openings) host.openings=[];
+  return host;
+}
+function addOpening(hostType, hostId, type){
+  const h=ouvHost(hostType,hostId); if(!h) return;
+  const d=OUV_DEF[type]||OUV_DEF.porte;
+  h.openings.push({ id:'o'+Date.now()+Math.floor(Math.random()*1000), type, larg:d.larg, haut:d.haut });
+  saveProjects(); renderRooms();
+}
+function setOpening(hostType, hostId, oid, field, v){
+  const h=ouvHost(hostType,hostId); if(!h) return;
+  const o=h.openings.find(x=>x.id===oid), n=parseFloat((''+v).replace(',','.'));
+  if(o && n>0){ o[field]=n; saveProjects(); renderRooms(); }
+}
+function deleteOpening(hostType, hostId, oid){
+  const h=ouvHost(hostType,hostId); if(!h) return;
+  h.openings=h.openings.filter(x=>x.id!==oid); saveProjects(); renderRooms();
+}
+function openingsToDeductions(openings){
+  return (openings||[]).map(o=>{ deductId++; return { id:deductId, larg:o.larg, haut:o.haut }; });
+}
+function openingsHtml(hostType, hostId, openings){
+  const rows = (openings||[]).map(o=>`
+      <div class="ouv-row">
+        <span class="ouv-ic">${o.type==='porte'?'🚪':'🪟'}</span>
+        <input type="number" step="0.01" min="0" value="${o.larg}" onchange="setOpening('${hostType}','${hostId}','${o.id}','larg',this.value)"> ×
+        <input type="number" step="0.01" min="0" value="${o.haut}" onchange="setOpening('${hostType}','${hostId}','${o.id}','haut',this.value)"> m
+        <button class="ouv-del" onclick="deleteOpening('${hostType}','${hostId}','${o.id}')">✕</button>
+      </div>`).join('');
+  return `<div class="ouv-box">
+        <div class="ouv-head">Ouvertures
+          <button class="ouv-add" onclick="addOpening('${hostType}','${hostId}','porte')">+ Porte</button>
+          <button class="ouv-add" onclick="addOpening('${hostType}','${hostId}','fenetre')">+ Fenêtre</button>
+        </div>${rows}</div>`;
+}
+function autofillFromWall(wallId){
+  const p=currentProject(); const w=(p.walls||[]).find(x=>x.id===wallId); if(!w) return;
+  const r = w.roomId ? p.rooms.find(x=>x.id===w.roomId) : null;
+  const h = (r && r.h) ? r.h : 2.5;
+  closePlan(); selectOuvrage('cloison');
+  const setDim=(id,v)=>{ const e=document.getElementById('dim-'+id); if(e) e.value=Math.round(v*100)/100; };
+  setDim('longueur', wallLen(w)); setDim('hauteur', h);
+  deductions = openingsToDeductions(w.openings);
+  const hasPorte=(w.openings||[]).some(o=>o.type==='porte');
+  const tg=document.getElementById('opt-porte'); if(tg){ if(hasPorte) tg.classList.add('on'); else tg.classList.remove('on'); }
+  renderDeductions(); calculer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Débits générés pour la cloison ('+wallLen(w).toFixed(2)+' m)');
+}
 function autofillFromRoom(roomId){
   const r = currentProject().rooms.find(x => x.id === roomId); if(!r) return;
   const target = document.getElementById('af-' + roomId).value;
@@ -3591,7 +3759,7 @@ function autofillFromRoom(roomId){
   const setDim = (id,v) => { const e = document.getElementById('dim-' + id); if(e) e.value = Math.round(v*100)/100; };
   deductions = [];
   if(SOL.includes(target)){ setDim('longueur', r.L); setDim('largeur', r.l); if(r.forme === 'L'){ deductId++; deductions = [{ id: deductId, larg: r.a, haut: r.b }]; } }
-  else if(MUR.includes(target)){ setDim('longueur', perim); setDim('hauteur', h); }
+  else if(MUR.includes(target)){ setDim('longueur', perim); setDim('hauteur', h); deductions = openingsToDeductions(r.openings); }
   else if(target === 'chauffage'){ setDim('longueur', r.L); setDim('largeur', r.l); setDim('hauteur', h); }
   else if(target === 'electricite'){ setDim('longueur', r.L); setDim('largeur', r.l); }
   renderDeductions(); calculer();
@@ -3680,8 +3848,6 @@ renderDeductions();
 drawViz();
 window.addEventListener('resize', drawViz);
 </script>
-<script>
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
-</script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');</script>
 </body>
 </html>
